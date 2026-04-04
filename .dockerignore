@@ -1,0 +1,29 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build output
+.next
+out
+build
+
+# environment & secrets
+.env
+.env.*
+
+# tooling & editor
+.git
+.gitignore
+.DS_Store
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+.vscode
+.idea
+
+# docs & misc (not needed in image)
+README.md
+docs/
+*.md
+LICENSE
