@@ -82,7 +82,7 @@ export class SimulationRuntime {
 
   constructor() {
     this.autoGenerateIncidents = process.env.NETRA_AUTO_GENERATE_INCIDENTS !== "false";
-    this.detectorHealthUrl = process.env.DETECTOR_HEALTH_URL ?? "http://localhost:8000/health";
+    this.detectorHealthUrl = process.env.DETECTOR_HEALTH_URL ?? "http://localhost:5001/health";
 
     this.engine = new SimulationEngine((state) => {
       this.latestSnapshot = state;

@@ -158,7 +158,9 @@ class CameraPipeline:
                 results = self.model.track(
                     frame,
                     persist=True,
-                    conf=0.25,
+                    conf=0.30,
+                    iou=0.3,
+                    agnostic_nms=True,
                     tracker="bytetrack.yaml",
                     verbose=False,
                 )[0]

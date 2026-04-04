@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { findNearestAvailableDrone, dispatchDrone } from "@/simulation/dispatch";
+import {
+  findBestDrone,
+  findNearestAvailableDrone,
+  dispatchDrone,
+  scoreDroneForIncident,
+  estimateRequiredBattery,
+} from "@/simulation/dispatch";
+import { clampBattery, updateDronePosition } from "@/simulation/drones";
 import type { Drone, Incident } from "@/simulation/types";
 import type { LatLng } from "@/lib/netra-constants";
 
@@ -40,31 +47,142 @@ function makeIncident(overrides: Partial<Incident> = {}): Incident {
 }
 
 describe("dispatch", () => {
-  // ── findNearestAvailableDrone ─────────────────────────────
-  describe("findNearestAvailableDrone", () => {
-    it("returns the closest idle drone with sufficient battery", () => {
+  // ── findBestDrone (scored selection) ────────────────────────
+  describe("findBestDrone", () => {
+    it("returns the best-scored idle drone with sufficient battery", () => {
       const close = makeDrone({ id: "d1", position: [18.535, 73.890] });
       const far = makeDrone({ id: "d2", position: [18.590, 73.740] });
-      const result = findNearestAvailableDrone([18.536, 73.893], [close, far]);
+      const result = findBestDrone([18.536, 73.893], [close, far]);
       expect(result).not.toBeNull();
       expect(result!.id).toBe("d1");
     });
 
     it("returns null when no drones are available", () => {
       const busy = makeDrone({ status: "en-route" });
-      expect(findNearestAvailableDrone([18.536, 73.893], [busy])).toBeNull();
+      expect(findBestDrone([18.536, 73.893], [busy])).toBeNull();
     });
 
     it("skips drones with low battery", () => {
       const low = makeDrone({ id: "low", battery: 15 });
       const ok = makeDrone({ id: "ok", battery: 80, position: [18.59, 73.74] });
-      const result = findNearestAvailableDrone([18.536, 73.893], [low, ok]);
+      const result = findBestDrone([18.536, 73.893], [low, ok]);
       expect(result).not.toBeNull();
       expect(result!.id).toBe("ok");
     });
 
     it("returns null for empty fleet", () => {
-      expect(findNearestAvailableDrone([18.536, 73.893], [])).toBeNull();
+      expect(findBestDrone([18.536, 73.893], [])).toBeNull();
+    });
+
+    it("prefers a faster drone slightly farther away when ETA is lower", () => {
+      // Slow drone, very close
+      const slow = makeDrone({ id: "slow", speed: 30, position: [18.536, 73.890], battery: 100 });
+      // Fast drone, slightly farther
+      const fast = makeDrone({ id: "fast", speed: 78, position: [18.540, 73.880], battery: 100 });
+      const incident = makeIncident({ position: [18.538, 73.895] });
+      const result = findBestDrone(incident.position, [slow, fast], incident);
+      // The faster drone should win because its ETA is significantly lower
+      // despite being slightly farther
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe("fast");
+    });
+
+    it("rejects a drone that cannot make the round-trip", () => {
+      // Drone is far from incident AND its base — not enough battery for round trip
+      const drone = makeDrone({
+        id: "low-range",
+        battery: 25, // just above 20% min but not enough for round trip
+        position: [18.4, 73.7],
+        basePosition: [18.4, 73.7],
+      });
+      const incident = makeIncident({ position: [18.6, 74.0] }); // ~35km away
+      const result = findBestDrone(incident.position, [drone], incident);
+      expect(result).toBeNull();
+    });
+
+    it("for critical incidents, prefers high-battery drones (severity bonus)", () => {
+      // Two drones at same distance, one with more battery
+      const highBat = makeDrone({
+        id: "high-bat",
+        battery: 95,
+        position: [18.535, 73.890],
+        speed: 72,
+      });
+      const lowBat = makeDrone({
+        id: "low-bat",
+        battery: 45,
+        position: [18.535, 73.890],
+        speed: 72,
+      });
+      const incident = makeIncident({ severity: "critical", position: [18.536, 73.893] });
+      const result = findBestDrone(incident.position, [lowBat, highBat], incident);
+      expect(result).not.toBeNull();
+      expect(result!.id).toBe("high-bat");
+    });
+
+    it("legacy alias findNearestAvailableDrone still works", () => {
+      const drone = makeDrone();
+      const result = findNearestAvailableDrone([18.536, 73.893], [drone]);
+      expect(result).not.toBeNull();
+    });
+  });
+
+  // ── scoreDroneForIncident ──────────────────────────────────
+  describe("scoreDroneForIncident", () => {
+    it("returns null for non-idle drones", () => {
+      const drone = makeDrone({ status: "en-route" });
+      const incident = makeIncident();
+      expect(scoreDroneForIncident(drone, incident)).toBeNull();
+    });
+
+    it("returns null for drones with battery <= 20", () => {
+      const drone = makeDrone({ battery: 20 });
+      const incident = makeIncident();
+      expect(scoreDroneForIncident(drone, incident)).toBeNull();
+    });
+
+    it("returns a positive score for eligible drones", () => {
+      const drone = makeDrone({ battery: 90 });
+      const incident = makeIncident();
+      const score = scoreDroneForIncident(drone, incident);
+      expect(score).not.toBeNull();
+      expect(score!).toBeGreaterThan(0);
+    });
+
+    it("closer drone gets higher ETA component", () => {
+      const incident = makeIncident();
+      const close = makeDrone({ id: "close", position: [18.535, 73.890], battery: 90 });
+      const far = makeDrone({ id: "far", position: [18.590, 73.740], battery: 90 });
+      const scoreClose = scoreDroneForIncident(close, incident)!;
+      const scoreFar = scoreDroneForIncident(far, incident)!;
+      expect(scoreClose).toBeGreaterThan(scoreFar);
+    });
+  });
+
+  // ── estimateRequiredBattery ────────────────────────────────
+  describe("estimateRequiredBattery", () => {
+    it("includes reserve margin", () => {
+      const required = estimateRequiredBattery(
+        [18.53, 73.84],
+        [18.53, 73.85], // ~1km
+        [18.53, 73.84], // back to start
+      );
+      // Should include the 15% reserve
+      expect(required).toBeGreaterThanOrEqual(15);
+    });
+
+    it("longer trips need more battery", () => {
+      const short = estimateRequiredBattery(
+        [18.53, 73.84],
+        [18.53, 73.85],
+        [18.53, 73.84],
+      );
+      const long = estimateRequiredBattery(
+        [18.53, 73.84],
+        [18.60, 73.95],
+        [18.53, 73.84],
+      );
+      expect(long).toBeGreaterThan(short);
     });
   });
 
@@ -132,13 +250,13 @@ describe("dispatch", () => {
         locationName: "Test Zone",
       });
 
-      // Step 1: Find nearest available drone
-      const nearest = findNearestAvailableDrone(incident.position, fleet);
-      expect(nearest).not.toBeNull();
-      expect(nearest!.id).toBe("d1"); // closest with sufficient battery
+      // Step 1: Find best drone
+      const best = findBestDrone(incident.position, fleet, incident);
+      expect(best).not.toBeNull();
+      expect(best!.id).toBe("d1"); // closest with sufficient battery + best score
 
       // Step 2: Dispatch
-      const { drone: dispatched, incident: updated, alert } = dispatchDrone(nearest!, incident);
+      const { drone: dispatched, incident: updated, alert } = dispatchDrone(best!, incident);
 
       // Step 3: Verify entire state
       expect(dispatched.status).toBe("en-route");
@@ -152,6 +270,48 @@ describe("dispatch", () => {
       expect(alert.type).toBe("dispatch");
       expect(alert.message).toContain("GARUDA-01");
       expect(alert.message).toContain("Test Zone");
+    });
+  });
+
+  // ── Battery logic ──────────────────────────────────────────
+  describe("battery", () => {
+    it("clampBattery never returns below 0", () => {
+      expect(clampBattery(-5)).toBe(0);
+      expect(clampBattery(-0.01)).toBe(0);
+    });
+
+    it("clampBattery never returns above 100", () => {
+      expect(clampBattery(105)).toBe(100);
+      expect(clampBattery(100.1)).toBe(100);
+    });
+
+    it("clampBattery passes through valid values", () => {
+      expect(clampBattery(50)).toBe(50);
+      expect(clampBattery(0)).toBe(0);
+      expect(clampBattery(100)).toBe(100);
+    });
+
+    it("updateDronePosition drains battery for en-route drones", () => {
+      const drone = makeDrone({
+        status: "en-route",
+        battery: 50,
+        waypoints: [[18.535, 73.890], [18.540, 73.900]],
+        currentWaypointIndex: 0,
+      });
+      const updated = updateDronePosition(drone);
+      expect(updated.battery).toBeLessThan(50);
+      expect(updated.battery).toBeGreaterThanOrEqual(0);
+    });
+
+    it("updateDronePosition never produces negative battery", () => {
+      const drone = makeDrone({
+        status: "en-route",
+        battery: 0.01,
+        waypoints: [[18.535, 73.890], [18.540, 73.900]],
+        currentWaypointIndex: 0,
+      });
+      const updated = updateDronePosition(drone);
+      expect(updated.battery).toBeGreaterThanOrEqual(0);
     });
   });
 });

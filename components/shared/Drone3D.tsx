@@ -48,33 +48,37 @@ export function Drone3D() {
       camera.lookAt(0, 0, 0);
 
       /* ── Lighting ────────────────────────────────────────── */
-      scene.add(new THREE.AmbientLight(0x0A1628, 2.5));
+      scene.add(new THREE.AmbientLight(0x0A1628, 3.0));
 
-      const keyLight = new THREE.DirectionalLight(0x00ffb2, 4.5);
-      keyLight.position.set(4, 7, 4);
+      const keyLight = new THREE.DirectionalLight(0x00ffb2, 12.0);
+      keyLight.position.set(5, 8, 4);
       scene.add(keyLight);
 
-      const rimLight = new THREE.DirectionalLight(0x5533FF, 2.0);
-      rimLight.position.set(-4, 2, -3);
+      const rimLight = new THREE.DirectionalLight(0x3B82F6, 8.0);
+      rimLight.position.set(-6, 3, -5);
       scene.add(rimLight);
 
-      const underLight = new THREE.DirectionalLight(0x001A33, 0.8);
-      underLight.position.set(0, -5, 0);
+      const rimLight2 = new THREE.DirectionalLight(0x8B5CF6, 6.0);
+      rimLight2.position.set(5, -2, -6);
+      scene.add(rimLight2);
+
+      const underLight = new THREE.DirectionalLight(0x0A1628, 2.0);
+      underLight.position.set(0, -6, 2);
       scene.add(underLight);
 
       /* ── Materials ───────────────────────────────────────── */
       const bodyMat = new THREE.MeshStandardMaterial({
-        color: 0x080E1A, metalness: 0.96, roughness: 0.16,
+        color: 0x080E1A, metalness: 1.0, roughness: 0.1,
       });
       const armMat = new THREE.MeshStandardMaterial({
-        color: 0x0E1824, metalness: 0.92, roughness: 0.20,
+        color: 0x0E1824, metalness: 1.0, roughness: 0.15,
       });
       const motorMat = new THREE.MeshStandardMaterial({
-        color: 0x050B12, metalness: 0.98, roughness: 0.08,
+        color: 0x050B12, metalness: 1.0, roughness: 0.05,
       });
       const accentMat = new THREE.MeshStandardMaterial({
-        color: 0x00ffb2, metalness: 0.8, roughness: 0.1,
-        emissive: new THREE.Color(0x002211), emissiveIntensity: 1.2,
+        color: 0x00ffb2, metalness: 0.9, roughness: 0.1,
+        emissive: new THREE.Color(0x00ffb2), emissiveIntensity: 2.5,
       });
       const rotorDiscMat = new THREE.MeshStandardMaterial({
         color: 0x00ffb2, transparent: true, opacity: 0.20,
@@ -176,7 +180,7 @@ export function Drone3D() {
         }
 
         // LED light + sphere
-        const led = new THREE.PointLight(LED_COLORS[idx], 3.0, 2.5);
+        const led = new THREE.PointLight(LED_COLORS[idx], 8.0, 4.0);
         led.position.set(x, 0.16, z);
         drone.add(led);
         ledLights.push(led);
@@ -186,7 +190,7 @@ export function Drone3D() {
           new THREE.MeshStandardMaterial({
             color: LED_COLORS[idx],
             emissive: new THREE.Color(LED_COLORS[idx]),
-            emissiveIntensity: 4,
+            emissiveIntensity: 8,
           })
         );
         ledSphere.position.set(x, 0.16, z);
@@ -275,7 +279,7 @@ export function Drone3D() {
         });
 
         ledLights.forEach((l, i) => {
-          l.intensity = 2.5 + Math.sin(t * 3.5 + i * 1.57) * 1.4;
+          l.intensity = 6.0 + Math.sin(t * 5.0 + i * 1.57) * 4.0;
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

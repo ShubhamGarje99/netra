@@ -1,13 +1,13 @@
 /**
  * SimulationEngine — The heart of the NETRA simulation.
  * Runs a 1Hz tick loop: generates incidents, dispatches drones,
- * updates positions, drains batteries, resolves incidents.
+ * updates positions, manages battery & charging, resolves incidents.
  */
 
 import type { Drone, Incident, Alert, SimulationStats } from "./types";
-import { initializeFleet, updateDronePosition } from "./drones";
+import { initializeFleet, updateDronePosition, clampBattery, CHARGE_RATE, LOW_BATTERY_THRESHOLD } from "./drones";
 import { buildIncident, type IncidentSeed, generateIncident, shouldGenerateIncident } from "./incidents";
-import { findNearestAvailableDrone, dispatchDrone, returnToBase } from "./dispatch";
+import { findBestDrone, dispatchDrone, returnToBase } from "./dispatch";
 import { calculateRoute, routeDistance } from "./pathfinding";
 
 export type EngineCallback = (state: {
@@ -151,10 +151,10 @@ export class SimulationEngine {
     const incident = this.incidents.find((inc) => inc.id === incidentId);
     if (!incident || incident.assignedDrone || incident.status !== "detected") return;
 
-    const nearest = findNearestAvailableDrone(incident.position, this.drones);
-    if (!nearest) return;
+    const best = findBestDrone(incident.position, this.drones, incident);
+    if (!best) return;
 
-    const result = dispatchDrone(nearest, incident);
+    const result = dispatchDrone(best, incident);
     this.drones = this.drones.map((d) =>
       d.id === result.drone.id ? result.drone : d
     );
@@ -228,7 +228,7 @@ export class SimulationEngine {
     // 2. Try to dispatch undispatched incidents using priority order
     this.dispatchPendingIncidents();
 
-    // 3. Update drone positions
+    // 3. Update drone positions (battery drain happens inside updateDronePosition)
     this.drones = this.drones.map((drone) => {
       if (drone.status === "idle" || drone.status === "charging") return drone;
 
@@ -278,7 +278,70 @@ export class SimulationEngine {
       return updated;
     });
 
-    // 4. Auto-resolve incidents
+    // 4. Low-battery auto-return — force drones below threshold back to base
+    this.drones = this.drones.map((drone) => {
+      if (
+        drone.battery <= LOW_BATTERY_THRESHOLD &&
+        drone.battery > 0 &&
+        (drone.status === "en-route" || drone.status === "on-scene" || drone.status === "dispatched")
+      ) {
+        // Release the incident
+        if (drone.assignedIncident) {
+          this.incidents = this.incidents.map((inc) =>
+            inc.id === drone.assignedIncident
+              ? { ...inc, status: "detected" as const, assignedDrone: null }
+              : inc
+          );
+        }
+
+        this.alerts.push({
+          id: `ALT-${Date.now()}-lowbat-${drone.id}`,
+          incidentId: drone.assignedIncident ?? "",
+          timestamp: Date.now(),
+          message: `⚠ ${drone.name} LOW BATTERY (${Math.round(drone.battery)}%) — aborting mission, returning to base`,
+          severity: "high",
+          type: "system",
+        });
+
+        return returnToBase(drone);
+      }
+
+      // Dead drone — emergency landing at current position
+      if (drone.battery <= 0 && drone.status !== "idle" && drone.status !== "charging") {
+        // Release the incident
+        if (drone.assignedIncident) {
+          this.incidents = this.incidents.map((inc) =>
+            inc.id === drone.assignedIncident
+              ? { ...inc, status: "detected" as const, assignedDrone: null }
+              : inc
+          );
+        }
+
+        this.alerts.push({
+          id: `ALT-${Date.now()}-dead-${drone.id}`,
+          incidentId: drone.assignedIncident ?? "",
+          timestamp: Date.now(),
+          message: `🔴 ${drone.name} BATTERY DEPLETED — emergency landing at current position`,
+          severity: "critical",
+          type: "system",
+        });
+
+        return {
+          ...drone,
+          status: "charging" as const,
+          altitude: 0,
+          assignedIncident: null,
+          waypoints: [],
+          currentWaypointIndex: 0,
+          eta: 0,
+          battery: 0,
+        };
+      }
+
+      return drone;
+    });
+
+    // 5. Auto-resolve incidents
     for (const incident of this.incidents) {
       if (
         incident.status === "monitoring" &&
@@ -313,21 +376,39 @@ export class SimulationEngine {
       }
     }
 
-    // 5. Drain battery on idle drones (very slow)
+    // 6. Battery management — charging cycle
     this.drones = this.drones.map((d) => {
+      // Idle drones with battery < 100 → enter charging state
       if (d.status === "idle" && d.battery < 100) {
-        // Slow recharge when idle
-        return { ...d, battery: Math.min(100, d.battery + 0.1) };
+        return {
+          ...d,
+          status: "charging" as const,
+          battery: clampBattery(d.battery + CHARGE_RATE),
+        };
       }
+
+      // Charging drones → recharge until 100%
+      if (d.status === "charging") {
+        const newBattery = clampBattery(d.battery + CHARGE_RATE);
+        if (newBattery >= 100) {
+          return {
+            ...d,
+            status: "idle" as const,
+            battery: 100,
+          };
+        }
+        return { ...d, battery: newBattery };
+      }
+
       return d;
     });
 
-    // 6. Keep alerts list manageable
+    // 7. Keep alerts list manageable
     if (this.alerts.length > 100) {
       this.alerts = this.alerts.slice(-80);
     }
 
-    // 7. Remove old resolved incidents (keep last 20)
+    // 8. Remove old resolved incidents (keep last 20)
     const resolved = this.incidents.filter((i) => i.status === "resolved");
     if (resolved.length > 20) {
       const toRemove = new Set(

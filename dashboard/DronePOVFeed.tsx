@@ -231,8 +231,9 @@ function PovCanvas({ drone, incident }: { drone: Drone; incident: Incident }) {
       ctx.fillText(`ALT ${Math.round(drone.altitude)}m  SPD ${drone.speed}km/h  HDG ${Math.round(drone.heading)}°`, 8, h - 14);
 
       // Bottom-left: battery
-      ctx.fillStyle = drone.battery > 30 ? "rgba(0, 230, 118, 0.7)" : "rgba(255, 68, 68, 0.8)";
-      ctx.fillText(`BAT ${Math.round(drone.battery)}%`, 8, h - 4);
+      const batPct = Math.max(0, Math.round(drone.battery));
+      ctx.fillStyle = batPct > 30 ? "rgba(0, 230, 118, 0.7)" : "rgba(255, 68, 68, 0.8)";
+      ctx.fillText(`BAT ${batPct}%`, 8, h - 4);
 
       // Bottom-right: ETA
       ctx.textAlign = "right";

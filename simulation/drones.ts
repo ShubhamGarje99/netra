@@ -1,10 +1,49 @@
 /**
  * Drone fleet manager — initializes and updates drone positions.
+ *
+ * Battery drain is now status-aware and always clamped to [0, 100].
  */
 
 import type { Drone } from "./types";
 import { DRONE_FLEET, type LatLng } from "@/lib/netra-constants";
 import { bearing } from "./pathfinding";
+
+// ── Battery drain rates (percentage points per tick / per second) ─────────
+
+/** Flying at full speed toward incident. */
+const DRAIN_EN_ROUTE = 0.08;
+/** Hovering on-scene (lower power). */
+const DRAIN_ON_SCENE = 0.03;
+/** Flying back to base (slightly less urgent). */
+const DRAIN_RETURNING = 0.06;
+/** Dispatched (same as en-route). */
+const DRAIN_DISPATCHED = 0.08;
+
+/** Recharge rate when in `charging` status (percentage points per tick). */
+export const CHARGE_RATE = 0.5;
+
+/** Battery threshold below which a drone should auto-return. */
+export const LOW_BATTERY_THRESHOLD = 15;
+
+/**
+ * Get the battery drain rate for a given drone status.
+ */
+function drainRateForStatus(status: string): number {
+  switch (status) {
+    case "en-route":    return DRAIN_EN_ROUTE;
+    case "dispatched":  return DRAIN_DISPATCHED;
+    case "on-scene":    return DRAIN_ON_SCENE;
+    case "returning":   return DRAIN_RETURNING;
+    default:            return 0; // idle, charging
+  }
+}
+
+/**
+ * Clamp a battery value to [0, 100].
+ */
+export function clampBattery(battery: number): number {
+  return Math.max(0, Math.min(100, battery));
+}
 
 /**
  * Create the initial drone fleet — all idle at base positions.
@@ -29,7 +68,7 @@ export function initializeFleet(): Drone[] {
 
 /**
  * Move a drone along its waypoints for one tick (1 second).
- * Returns updated drone.
+ * Battery is drained based on status and always clamped to [0, 100].
  */
 export function updateDronePosition(drone: Drone): Drone {
   if (
@@ -49,6 +88,10 @@ export function updateDronePosition(drone: Drone): Drone {
   const dlng = target[1] - drone.position[1];
   const dist = Math.sqrt(dlat * dlat + dlng * dlng);
 
+  // Drain battery based on current status — always clamped
+  const drain = drainRateForStatus(drone.status);
+  const newBattery = clampBattery(drone.battery - drain);
+
   // Threshold: if within ~50m
   if (dist < 0.0005) {
     const nextIdx = drone.currentWaypointIndex + 1;
@@ -60,6 +103,7 @@ export function updateDronePosition(drone: Drone): Drone {
         currentWaypointIndex: nextIdx,
         heading: bearing(drone.position, target),
         altitude: drone.status === "returning" ? 0 : 120,
+        battery: newBattery,
       };
     }
     return {
@@ -67,6 +111,7 @@ export function updateDronePosition(drone: Drone): Drone {
       position: target,
       currentWaypointIndex: nextIdx,
       heading: bearing(target, drone.waypoints[nextIdx]),
+      battery: newBattery,
     };
   }
 
@@ -87,7 +132,7 @@ export function updateDronePosition(drone: Drone): Drone {
     heading: bearing(drone.position, target),
     altitude: drone.status === "idle" ? 0 : 120,
     eta: Math.round(etaSeconds),
-    battery: drone.battery - (drone.status === "idle" ? 0 : 0.05),
+    battery: newBattery,
   };
 }
 

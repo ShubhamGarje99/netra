@@ -160,21 +160,6 @@ export interface CameraFeed {
 }
 
 export const CAMERA_FEEDS: CameraFeed[] = [
-  // Existing sample-based cameras
-  { id: "CAM-FC-01", location: "FC Road", position: [18.5195, 73.8408] },
-  { id: "CAM-JM-02", location: "JM Road", position: [18.5214, 73.8543] },
-  {
-    id: "CAM-KP-03",
-    location: "Koregaon Park (restricted)",
-    position: [18.5362, 73.8939],
-    restrictedZone: true,
-  },
-  {
-    id: "CAM-SW-04",
-    location: "Swargate (restricted)",
-    position: [18.5016, 73.8636],
-    restrictedZone: true,
-  },
   // Footage-based cameras (YOLOv8 CV pipeline)
   { id: "CAM-01", location: "JM Road Junction", position: [18.5195, 73.8553] },
   { id: "CAM-02", location: "Hinjewadi Highway", position: [18.5913, 73.7389] },

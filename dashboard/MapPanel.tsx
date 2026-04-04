@@ -56,7 +56,7 @@ const DroneMarkerItem = memo(function DroneMarkerItem({
           <br />
           Status: {drone.status}
           <br />
-          Battery: {Math.round(drone.battery)}%
+          Battery: {Math.max(0, Math.round(drone.battery))}%
           {drone.eta > 0 && (
             <>
               <br />

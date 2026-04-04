@@ -14,7 +14,7 @@ const STATUS_COLORS: Record<string, string> = {
   dispatched: "#FF8C00",
   "on-scene": "#FF4444",
   returning: "#FFD700",
-  charging: "#757575",
+  charging: "#00BFFF",
 };
 
 export function DroneCard({ drone }: DroneCardProps) {
@@ -55,20 +55,26 @@ export function DroneCard({ drone }: DroneCardProps) {
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
-                  width: `${drone.battery}%`,
-                  backgroundColor: drone.battery > 30 ? "#C8F23A" : "#FF4444",
+                  width: `${Math.max(0, drone.battery)}%`,
+                  backgroundColor:
+                    drone.status === "charging"
+                      ? "#00BFFF"
+                      : drone.battery > 30
+                        ? "#C8F23A"
+                        : "#FF4444",
+                  transition: "width 0.5s ease, background-color 0.3s ease",
                 }}
               />
             </div>
           </div>
-          <span className="font-mono text-[9px] text-dim">{Math.round(drone.battery)}%</span>
+          <span className="font-mono text-[9px] text-dim">{Math.max(0, Math.round(drone.battery))}%</span>
         </div>
 
         {/* Speed */}
         <div className="flex items-center gap-1">
           <Gauge className="w-3 h-3 text-dim" />
           <span className="font-mono text-[9px] text-dim">
-            {drone.status === "idle" ? "0" : drone.speed} km/h
+            {drone.status === "idle" || drone.status === "charging" ? "0" : drone.speed} km/h
           </span>
         </div>
 
