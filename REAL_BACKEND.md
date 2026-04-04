@@ -1,122 +1,104 @@
-# NETRA — Real Backend
+# NETRA Backend Mode
 
-> FastAPI service powering the NETRA drone-surveillance platform.
+This project now runs with a server-authoritative simulation runtime, detector ingest endpoints, and PostgreSQL persistence.
 
----
+## What changed
 
-## Architecture
+- Simulation state is generated and owned by backend runtime (`lib/server/simulation-runtime.ts`).
+- Dashboard clients subscribe to live server updates via Server-Sent Events.
+- Incidents can be ingested from external systems over HTTP (`POST /api/incidents`).
+- Detector output can be posted directly (`POST /api/detector/events`) and is mapped to incident taxonomy.
+- Runtime snapshots and detector events are persisted in PostgreSQL.
+- In multi-instance deployment, one node acquires Postgres advisory lock and acts as leader (tick loop); others run follower mode and stream persisted state.
 
+## Environment
+
+Copy `.env.example` values into your own environment and adjust:
+
+- `DATABASE_URL=postgres://...` to enable durable state.
+- `DATABASE_SSL=true` only when your managed Postgres requires TLS.
+- `ENABLE_MOCK_GENERATOR=false` to disable random demo incidents.
+- `NETRA_INGEST_API_KEY=...` to require API key auth on `POST /api/incidents`.
+- `NETRA_DETECTOR_API_KEY=...` to require API key auth on `POST /api/detector/events`.
+
+If `DATABASE_URL` is unset, runtime still works but falls back to single-node in-memory mode.
+
+## API Endpoints
+
+- `GET /api/simulation/state`
+  - Returns current running state and simulation snapshot.
+
+- `POST /api/simulation/control`
+  - Payload: `{ "action": "start" }` or `{ "action": "stop" }`
+
+- `GET /api/simulation/stream`
+  - SSE stream for live simulation updates.
+
+- `POST /api/detector/events`
+  - Ingest model/camera detections, auto-map to supported incident classes, and create incidents when mapping is valid.
+
+- `GET /api/incidents`
+  - Returns current incident list from backend state.
+
+- `POST /api/incidents`
+  - Ingest external incident payload:
+
+```json
+{
+  "type": "road_accident",
+  "severity": "high",
+  "lat": 28.6289,
+  "lng": 77.2418,
+  "locationName": "ITO Junction",
+  "description": "Collision detected by camera CAM-ITO-04",
+  "detectionConfidence": 0.92,
+  "resolveAfterTicks": 45
+}
 ```
-backend/
-├── Dockerfile              # Python 3.12-slim + OpenCV system deps
-├── requirements.txt        # Pinned Python dependencies
-└── app/
-    ├── __init__.py
-    ├── main.py             # FastAPI app, CORS, router registration
-    └── routers/
-        ├── __init__.py
-        ├── drones.py       # REST — drone CRUD
-        ├── incidents.py    # REST — incident management
-        └── telemetry.py    # WebSocket — real-time telemetry stream
-```
 
----
-
-## API Surface
-
-### REST Endpoints
-
-| Method | Path                     | Description                          |
-| ------ | ------------------------ | ------------------------------------ |
-| `GET`  | `/health`                | Liveness probe — returns `{"status": "ok"}` |
-| `GET`  | `/api/drones/`           | List all registered drones           |
-| `GET`  | `/api/drones/{drone_id}` | Get details for a single drone       |
-| `GET`  | `/api/incidents/`        | List all reported incidents          |
-| `POST` | `/api/incidents/`        | Report a new incident                |
-
-### WebSocket
-
-| Path              | Description                                    |
-| ----------------- | ---------------------------------------------- |
-| `ws://…/ws/telemetry` | Bi-directional telemetry stream (JSON frames) |
-
-**Telemetry protocol (JSON over WS):**
-
-```jsonc
-// Server → Client
-{"type": "position", "drone_id": "…", "lat": …, "lng": …, "alt": …}
-{"type": "battery",  "drone_id": "…", "level": …}
-
-// Client → Server
-{"type": "ping"}
-// Server → Client (reply)
-{"type": "pong"}
-```
-
----
-
-## Running Locally
-
-### Bare-metal
+## Example ingest request
 
 ```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+curl -X POST http://localhost:3000/api/incidents \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: YOUR_KEY_IF_CONFIGURED" \
+  -d '{
+    "type": "road_accident",
+    "severity": "high",
+    "lat": 28.6289,
+    "lng": 77.2418,
+    "locationName": "ITO Junction",
+    "description": "Collision detected by camera CAM-ITO-04",
+    "detectionConfidence": 0.92
+  }'
 ```
 
-### Docker (standalone)
+## Example detector event request
 
 ```bash
-docker build -t netra-backend ./backend
-docker run -p 8000:8000 netra-backend
+curl -X POST http://localhost:3000/api/detector/events \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: YOUR_DETECTOR_KEY_IF_CONFIGURED" \
+  -d '{
+    "sourceType": "camera",
+    "cameraId": "CAM-ITO-04",
+    "detections": [
+      { "label": "accident", "confidence": 0.93 }
+    ]
+  }'
 ```
 
-### Docker Compose (full stack)
+Detector mapping supports labels for:
 
-```bash
-docker compose up          # frontend :3000  +  backend :8000
-docker compose up backend  # backend only
-```
+- crowd gathering
+- road accident / fallen person
+- unauthorized entry
+- suspicious vehicle
+- abandoned object
+- traffic violations
 
----
+## Production notes
 
-## Key Dependencies
-
-| Package                   | Version   | Purpose                          |
-| ------------------------- | --------- | -------------------------------- |
-| `fastapi`                 | 0.115.12  | Web framework                    |
-| `uvicorn[standard]`       | 0.34.2    | ASGI server                      |
-| `pydantic`                | 2.11.3    | Data validation & serialisation  |
-| `websockets`              | 15.0.1    | WebSocket transport              |
-| `opencv-python-headless`  | 4.11.0.86 | Video/image processing           |
-| `numpy`                   | 2.2.4     | Numerical operations             |
-| `httpx`                   | 0.28.1    | Async HTTP client                |
-
----
-
-## Docker Details
-
-- **Base image:** `python:3.12-slim`
-- **System packages:** `libgl1`, `libglib2.0-0` (OpenCV), `curl` (health checks)
-- **Runs as:** non-root `appuser` (UID 1001)
-- **Port:** `8000`
-- **Health check:** `curl -f http://localhost:8000/health`
-- **Volume:** `drone-data` mounted at `/app/data`
-
----
-
-## CORS
-
-The backend accepts requests from `http://localhost:3000` (the Next.js frontend) with credentials, all methods, and all headers.
-
----
-
-## What's Next
-
-- [ ] Persist drones & incidents to a database (Postgres / SQLite)
-- [ ] Add authentication (JWT / API-key)
-- [ ] Broadcast live telemetry from drone hardware via the WebSocket
-- [ ] Stream MJPEG video feeds through a dedicated endpoint
-- [ ] Add structured logging and OpenTelemetry traces
+- For production, run Postgres in HA mode and pin all app nodes to the same database.
+- If deploying serverless, move tick runtime to a dedicated always-on worker and keep route handlers stateless.
+- Add TLS and mTLS between detector services and ingest APIs for secure field deployment.

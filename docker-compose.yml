@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: netra-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: netra
+      POSTGRES_PASSWORD: netra
+      POSTGRES_DB: netra
+    ports:
+      - "5432:5432"
+    volumes:
+      - netra_pgdata:/var/lib/postgresql/data
+
+  detector:
+    build: ./detector
+    container_name: netra-detector
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./detector/samples:/app/samples
+    environment:
+      NETRA_APP_URL: http://host.docker.internal:3000
+      DETECTOR_CPU_THREADS: "2"
+      DETECTOR_INFER_FPS: "1"
+      DETECTOR_ENABLE_POSE: "false"
+    mem_limit: 3g
+    cpus: 2
+    depends_on:
+      - postgres
+
+volumes:
+  netra_pgdata:
