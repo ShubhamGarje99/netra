@@ -2,18 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSimulationStore } from "@/store/simulation-store";
-import type { IncidentType, IncidentSeverity } from "@/simulation/types";
-
-interface IncidentIngestPayload {
-  type: IncidentType;
-  severity: IncidentSeverity;
-  lat: number;
-  lng: number;
-  locationName: string;
-  description: string;
-  detectionConfidence: number;
-  resolveAfterTicks: number;
-}
+import { IncidentIngestPayload } from "@/lib/server/simulation-runtime";
 
 export function TerminalLog() {
   const incidents = useSimulationStore((s) => s.incidents);

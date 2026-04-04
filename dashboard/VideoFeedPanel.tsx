@@ -17,7 +17,7 @@ export function VideoFeedPanel() {
         <DronePOVFeed />
       </div>
 
-      <div className="flex-1 grid grid-cols-2 gap-1 p-1 overflow-hidden min-h-0">
+      <div className="flex-1 grid grid-cols-2 auto-rows-[minmax(100px,1fr)] gap-1 p-1 overflow-y-auto min-h-0" data-lenis-prevent>
         {CAMERA_FEEDS.map((feed) => (
           <VideoFeedCard
             key={feed.id}

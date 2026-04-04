@@ -34,6 +34,10 @@ interface SimulationStore {
   targetingMode:     boolean;
   /** Detector service health (from SSE heartbeat) */
   detectorOnline:    boolean | null;
+  /** Selected camera for video feed highlight */
+  selectedCamera:    string | null;
+  /** Camera online status from detector service */
+  cctvOnline:        Record<string, boolean>;
 
   // Actions
   update: (data: {
@@ -51,6 +55,8 @@ interface SimulationStore {
   clearToast:       () => void;
   setTargetingMode: (active: boolean) => void;
   setDetectorOnline:(online: boolean | null) => void;
+  setSelectedCamera:(id: string | null) => void;
+  setCCTVOnline:    (id: string, online: boolean) => void;
 }
 
 const INITIAL_STATS: SimulationStats = {
@@ -76,6 +82,8 @@ export const useSimulationStore = createWithEqualityFn<SimulationStore>(
     toast:            null,
     targetingMode:    false,
     detectorOnline:   null,
+    selectedCamera:   null,
+    cctvOnline:       {},
 
     update: (data) =>
       set({
@@ -94,6 +102,8 @@ export const useSimulationStore = createWithEqualityFn<SimulationStore>(
     clearToast:       ()         => set({ toast: null }),
     setTargetingMode: (active)   => set({ targetingMode: active }),
     setDetectorOnline:(online)   => set({ detectorOnline: online }),
+    setSelectedCamera:(id)       => set({ selectedCamera: id }),
+    setCCTVOnline:    (id, online) => set((s) => ({ cctvOnline: { ...s.cctvOnline, [id]: online } })),
   }),
   shallow
 );

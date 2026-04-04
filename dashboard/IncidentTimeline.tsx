@@ -51,7 +51,7 @@ export function IncidentTimeline() {
                 />
 
                 {/* Content */}
-                <div className="flex items-center gap-2 mb-0.5">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                   <span className="font-mono text-[10px] text-dim">{time}</span>
                   <span
                     className="font-mono text-[9px] tracking-wider uppercase px-1 py-0.5"
@@ -59,6 +59,46 @@ export function IncidentTimeline() {
                   >
                     {incident.status}
                   </span>
+
+                  {/* Source badge */}
+                  {incident.source === "yolov8_detector" ? (
+                    <span style={{
+                      background: "rgba(0,255,178,0.12)",
+                      color: "#00FFB2",
+                      border: "1px solid rgba(0,255,178,0.3)",
+                      fontSize: "10px",
+                      fontFamily: "monospace",
+                      padding: "2px 6px",
+                      borderRadius: "3px",
+                      whiteSpace: "nowrap",
+                    }}>
+                      ◉ CV{incident.confidence ? ` · ${Math.round(incident.confidence * 100)}%` : ""}
+                    </span>
+                  ) : incident.source === "manual" ? (
+                    <span style={{
+                      background: "rgba(255,200,0,0.1)",
+                      color: "#FFC800",
+                      border: "1px solid rgba(255,200,0,0.25)",
+                      fontSize: "10px",
+                      fontFamily: "monospace",
+                      padding: "2px 6px",
+                      borderRadius: "3px",
+                    }}>
+                      ◈ MANUAL
+                    </span>
+                  ) : (
+                    <span style={{
+                      background: "rgba(255,255,255,0.05)",
+                      color: "#555",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      fontSize: "10px",
+                      fontFamily: "monospace",
+                      padding: "2px 6px",
+                      borderRadius: "3px",
+                    }}>
+                      ◎ SIM
+                    </span>
+                  )}
                 </div>
 
                 <p className="font-mono text-[10px] text-signal/80 leading-tight">
@@ -68,6 +108,29 @@ export function IncidentTimeline() {
                   {incident.locationName}
                   {incident.assignedDrone && ` → ${incident.assignedDrone}`}
                 </p>
+
+                {/* Camera info */}
+                {incident.camera_id && (
+                  <span style={{ fontFamily: "monospace", fontSize: "10px", color: "rgba(0,255,178,0.5)" }}>
+                    via {incident.camera_id} · {incident.camera_name}
+                  </span>
+                )}
+
+                {/* Detected class pills */}
+                {incident.detected_classes && incident.detected_classes.length > 0 && (
+                  <div className="flex flex-wrap gap-0.5 mt-0.5">
+                    {incident.detected_classes.map((cls, idx) => (
+                      <span key={`${cls}-${idx}`} style={{
+                        background: "rgba(255,255,255,0.06)",
+                        color: "#888",
+                        fontSize: "9px",
+                        fontFamily: "monospace",
+                        padding: "1px 5px",
+                        borderRadius: "2px",
+                      }}>{cls}</span>
+                    ))}
+                  </div>
+                )}
               </button>
             );
           })}

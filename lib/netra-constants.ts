@@ -98,10 +98,10 @@ export const NO_FLY_ZONES: NoFlyZone[] = [
 /** Pune metropolitan core — keeps tiles away from Arabian Sea westward drift */
 export const MAP_CENTER: LatLng = [18.521, 73.8675];
 export const MAP_ZOOM = 12;
-/** [[south, west], [north, east]] — tight PMR box */
+/** [[south, west], [north, east]] — relaxed PMR box to allow more panning */
 export const MAP_MAX_BOUNDS: [[number, number], [number, number]] = [
-  [18.42, 73.76],
-  [18.62, 73.98],
+  [18.22, 73.56],
+  [18.82, 74.18],
 ];
 export const DARK_TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 export const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>';
@@ -157,6 +157,7 @@ export interface CameraFeed {
 }
 
 export const CAMERA_FEEDS: CameraFeed[] = [
+  // Existing sample-based cameras
   { id: "CAM-FC-01", location: "FC Road", position: [18.5195, 73.8408] },
   { id: "CAM-JM-02", location: "JM Road", position: [18.5214, 73.8543] },
   {
@@ -171,6 +172,11 @@ export const CAMERA_FEEDS: CameraFeed[] = [
     position: [18.5016, 73.8636],
     restrictedZone: true,
   },
+  // Footage-based cameras (YOLOv8 CV pipeline)
+  { id: "CAM-01", location: "JM Road Junction", position: [18.5195, 73.8553] },
+  { id: "CAM-02", location: "Hinjewadi Highway", position: [18.5913, 73.7389] },
+  { id: "CAM-03", location: "Magarpatta Entry", position: [18.5089, 73.9260] },
+  { id: "CAM-04", location: "Kharadi IT Park", position: [18.5512, 73.9442] },
 ];
 
 export const RESTRICTED_CAMERA_IDS = new Set(

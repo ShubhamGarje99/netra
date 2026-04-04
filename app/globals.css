@@ -473,6 +473,40 @@ body {
   font-family: var(--font-mono), monospace !important; font-size: 0.74rem !important;
 }
 .leaflet-popup-tip { background: var(--surface) !important; }
+.leaflet-popup-close-button { color: #555 !important; }
+
+/* CCTV Marker Icon */
+.cctv-marker-icon { background: transparent !important; border: none !important; }
+
+/* CCTV Popup */
+.cctv-popup {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  color: #e0e0e0;
+  min-width: 160px;
+}
+.cctv-popup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 4px;
+}
+.cctv-popup-id { color: #00FFB2; font-weight: bold; }
+.cctv-popup-status { font-size: 9px; }
+.cctv-popup-name { color: #aaa; font-size: 10px; margin-bottom: 2px; }
+.cctv-popup-time { color: #666; font-size: 9px; margin-bottom: 6px; }
+.cctv-popup-btn {
+  background: rgba(0,255,178,0.12);
+  color: #00FFB2;
+  border: 1px solid rgba(0,255,178,0.3);
+  padding: 3px 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  letter-spacing: 0.1em;
+  transition: background 0.2s;
+}
+.cctv-popup-btn:hover { background: rgba(0,255,178,0.25); }
 
 /* ─────────────────────────────────────────────────
    MISC

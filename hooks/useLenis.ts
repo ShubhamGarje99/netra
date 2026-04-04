@@ -3,11 +3,7 @@
 import { useEffect, useRef } from "react";
 import Lenis from "lenis";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+import { ScrollTrigger } from "@/lib/gsap";
 
 export function useLenis(): React.MutableRefObject<Lenis | null> {
   const lenisRef = useRef<Lenis | null>(null);

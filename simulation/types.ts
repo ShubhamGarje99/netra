@@ -44,6 +44,16 @@ export interface Incident {
   description: string;
   detectionConfidence: number; // 0-1
   resolveAtTick: number;      // auto-resolve at this tick
+  /** Source of this incident: CV detector, simulation engine, or manual trigger */
+  source?: "yolov8_detector" | "simulation" | "manual";
+  /** Camera ID if CV-detected */
+  camera_id?: string;
+  /** Human-readable camera name */
+  camera_name?: string;
+  /** Detection confidence from CV model */
+  confidence?: number;
+  /** YOLO class names that triggered this incident */
+  detected_classes?: string[];
 }
 
 export interface Alert {

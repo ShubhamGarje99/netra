@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { gsap, ScrollTrigger } from "@/lib/gsap";
 
 const SECTION_IDS = ["hero", "crisis", "capabilities", "pipeline", "deploy"] as const;
 

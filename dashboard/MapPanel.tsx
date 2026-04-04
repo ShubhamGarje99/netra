@@ -17,6 +17,8 @@ import type { Drone, Incident } from "@/simulation/types";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { CCTVMarkers } from "@/dashboard/CCTVMarkers";
+
 /* ── Individual drone marker ─────────────────────────────────────── */
 const DroneMarkerItem = memo(function DroneMarkerItem({
   drone,
@@ -386,6 +388,7 @@ export function MapPanel() {
         <FlightPaths />
         <DroneMarkers />
         <IncidentMarkers />
+        <CCTVMarkers />
         <IncidentTargeting />
         <MapUpdater />
       </MapContainer>

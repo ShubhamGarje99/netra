@@ -83,7 +83,7 @@ export function AnalyticsPanel() {
           <div>
             <div className="font-mono text-[9px] text-dim tracking-wider mb-2">INCIDENT DISTRIBUTION</div>
             <div className="h-28 min-h-[112px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -118,7 +118,7 @@ export function AnalyticsPanel() {
           <div>
             <div className="font-mono text-[9px] text-dim tracking-wider mb-2">RESPONSE TIMES (s)</div>
             <div className="h-24 min-h-[96px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <BarChart data={responseData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#3B3B3B" strokeOpacity={0.3} />
                   <XAxis dataKey="name" tick={{ fontSize: 8, fill: "#757575" }} />

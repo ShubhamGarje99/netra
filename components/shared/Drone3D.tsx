@@ -1,5 +1,22 @@
 "use client";
 
+/**
+ * Drone3D — Three.js procedural quadcopter
+ *
+ * Geometry from primitives:
+ *   - 2 body plates (BoxGeometry)
+ *   - 4 diagonal arms (CylinderGeometry)
+ *   - 4 motor housings + accent rings
+ *   - 4 × rotor discs + 2 blades each (spinning)
+ *   - camera gimbal arm + housing + lens
+ *   - 4 landing legs + 2 skids
+ *   - 4 LED PointLights (pulsing)
+ *
+ * Driven by:
+ *   - anime.js v4 entrance (scale spring)
+ *   - Three.js RAF: float, auto-rotate, rotor spin, LED pulse
+ */
+
 import { useEffect, useRef } from "react";
 
 export function Drone3D() {
