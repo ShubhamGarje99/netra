@@ -166,6 +166,7 @@ export class SimulationEngine {
 
   private incidentPriorityScore(incident: Incident) {
     const typeWeight: Record<Incident["type"], number> = {
+      fire_breakout: 320,
       crowd_gathering: 300,
       road_accident: 260,
       suspicious_vehicle: 220,

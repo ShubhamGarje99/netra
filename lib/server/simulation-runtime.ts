@@ -33,6 +33,7 @@ const INCIDENT_TYPES: IncidentType[] = [
   "suspicious_vehicle",
   "abandoned_object",
   "traffic_violation",
+  "fire_breakout",
 ];
 
 const INCIDENT_SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];

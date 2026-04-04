@@ -1,0 +1,7 @@
+path: /Users/shubham/Developer/netra/detector/car_crash_dataset
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 7
+names: ['vehicle', 'person', 'accident', 'car-crash', 'crash', 'moderate', 'severe']

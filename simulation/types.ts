@@ -12,7 +12,8 @@ export type IncidentType =
   | "unauthorized_entry"
   | "suspicious_vehicle"
   | "abandoned_object"
-  | "traffic_violation";
+  | "traffic_violation"
+  | "fire_breakout";
 
 export type IncidentStatus = "detected" | "drone_dispatched" | "drone_arriving" | "monitoring" | "resolved";
 

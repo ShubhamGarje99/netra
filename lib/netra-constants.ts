@@ -115,6 +115,7 @@ export const INCIDENT_TYPES = [
   "suspicious_vehicle",
   "abandoned_object",
   "traffic_violation",
+  "fire_breakout",
 ] as const;
 
 export type IncidentType = (typeof INCIDENT_TYPES)[number];
@@ -126,9 +127,11 @@ export const INCIDENT_TYPE_LABELS: Record<IncidentType, string> = {
   suspicious_vehicle: "Suspicious Vehicle",
   abandoned_object: "Abandoned Object",
   traffic_violation: "Traffic Violation",
+  fire_breakout: "Fire Breakout",
 };
 
 export const INCIDENT_TYPE_WEIGHTS: Record<IncidentType, number> = {
+  fire_breakout: 0.40,
   road_accident: 0.30,
   crowd_gathering: 0.20,
   traffic_violation: 0.20,
@@ -177,6 +180,9 @@ export const CAMERA_FEEDS: CameraFeed[] = [
   { id: "CAM-02", location: "Hinjewadi Highway", position: [18.5913, 73.7389] },
   { id: "CAM-03", location: "Magarpatta Entry", position: [18.5089, 73.9260] },
   { id: "CAM-04", location: "Kharadi IT Park", position: [18.5512, 73.9442] },
+  { id: "CAM-05", location: "Crash Zone Epsilon", position: [18.5100, 73.8600] },
+  { id: "CAM-06", location: "Crowd Zone Zeta", position: [18.5150, 73.8650] },
+  { id: "CAM-07", location: "Crowd Zone Eta", position: [18.5120, 73.8680] },
 ];
 
 export const RESTRICTED_CAMERA_IDS = new Set(

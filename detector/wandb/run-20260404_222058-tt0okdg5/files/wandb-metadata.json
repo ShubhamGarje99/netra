@@ -1,0 +1,37 @@
+{
+  "os": "macOS-26.3-arm64-arm-64bit-Mach-O",
+  "python": "CPython 3.13.3",
+  "startedAt": "2026-04-04T16:50:58.288494Z",
+  "program": "/Users/shubham/Developer/netra/detector/train_crash_model.py",
+  "codePath": "detector/train_crash_model.py",
+  "codePathLocal": "train_crash_model.py",
+  "git": {
+    "remote": "https://github.com/ShubhamGarje99/netra.git",
+    "commit": "31f6a6cd4fbe121126c12b31b3b452d633f54f2e"
+  },
+  "email": "shubhamvijaygarje@gmail.com",
+  "root": "/Users/shubham/Developer/netra/detector",
+  "host": "Shubhams-MacBook-Air-2.local",
+  "executable": "/Users/shubham/Developer/netra/detector/venv/bin/python",
+  "cpu_count": 8,
+  "cpu_count_logical": 8,
+  "disk": {
+    "/": {
+      "total": "245107195904",
+      "used": "227681689600"
+    }
+  },
+  "memory": {
+    "total": "8589934592"
+  },
+  "apple": {
+    "name": "Apple M3",
+    "ecpuCores": 4,
+    "pcpuCores": 4,
+    "gpuCores": 8,
+    "memoryGb": 8,
+    "swapTotalBytes": "5368709120",
+    "ramTotalBytes": "8589934592"
+  },
+  "writerId": "u2eud4jfenr2v5h13cca5fg37mluqyns"
+}

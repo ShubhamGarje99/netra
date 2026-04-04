@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { INCIDENT_TYPE_LABELS } from "@/lib/netra-constants";
 import type { IncidentType, Incident } from "@/simulation/types";
 import { useSimulationStore } from "@/store/simulation-store";
@@ -10,7 +10,7 @@ interface VideoFeedCardProps {
   location: string;
 }
 
-const STREAM_BASE = "http://localhost:5001/stream";
+const STREAM_BASE = "http://localhost:5001";
 
 // Fallback Canvas Component
 function OfflineCanvas({ cameraId }: { cameraId: string }) {
@@ -74,7 +74,7 @@ function OfflineCanvas({ cameraId }: { cameraId: string }) {
 export function VideoFeedCard({ cameraId, location }: VideoFeedCardProps) {
   const [streamStatus, setStreamStatus] = useState<"loading" | "live" | "offline">("loading");
   const [lastIncidentFlash, setLastIncidentFlash] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
 
   const selectedCamera = useSimulationStore((s) => s.selectedCamera);
   const isSelected = selectedCamera === cameraId;
@@ -97,17 +97,63 @@ export function VideoFeedCard({ cameraId, location }: VideoFeedCardProps) {
     }
   }, [recentIncident?.id]);
 
+  // Poll snapshots instead of holding persistent MJPEG connections.
+  // Browsers limit HTTP/1.1 connections to ~6 per host, so holding 11
+  // persistent MJPEG streams causes most to starve and show "OFFLINE".
+  // Snapshot polling uses short-lived requests that close immediately.
   useEffect(() => {
-    let retryTimer: NodeJS.Timeout;
-    if (streamStatus === "offline" || streamStatus === "loading") {
-      retryTimer = setInterval(() => {
-        if (imgRef.current) {
-          imgRef.current.src = `${STREAM_BASE}/${cameraId}?t=${Date.now()}`;
+    let cancelled = false;
+    let consecutiveErrors = 0;
+
+    async function poll() {
+      while (!cancelled) {
+        try {
+          const response = await fetch(
+            `${STREAM_BASE}/snapshot/${cameraId}?t=${Date.now()}`,
+            { cache: "no-store" }
+          );
+
+          if (!response.ok || response.headers.get("content-type")?.includes("json")) {
+            // JSON response = error payload from server
+            consecutiveErrors++;
+            if (consecutiveErrors > 5) {
+              setStreamStatus("offline");
+            }
+            await sleep(1000);
+            continue;
+          }
+
+          const blob = await response.blob();
+          if (cancelled) break;
+
+          const url = URL.createObjectURL(blob);
+          setImgSrc((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
+          });
+          setStreamStatus("live");
+          consecutiveErrors = 0;
+
+          await sleep(150); // ~6-7 fps visual — smooth enough, low overhead
+        } catch {
+          consecutiveErrors++;
+          if (consecutiveErrors > 5) {
+            setStreamStatus("offline");
+          }
+          await sleep(2000);
         }
-      }, 3000);
+      }
     }
-    return () => clearInterval(retryTimer);
-  }, [streamStatus, cameraId]);
+
+    poll();
+    return () => {
+      cancelled = true;
+      setImgSrc((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    };
+  }, [cameraId]);
 
   const borderStyle = isSelected
     ? "2px solid #00FFB2"
@@ -119,19 +165,18 @@ export function VideoFeedCard({ cameraId, location }: VideoFeedCardProps) {
     <div className="relative bg-void overflow-hidden transition-all duration-300"
          style={{ border: borderStyle, aspectRatio: "4/3" }}>
       
-      <img
-        ref={imgRef}
-        src={`${STREAM_BASE}/${cameraId}`}
-        style={{
-          width: "100%", height: "100%", objectFit: "cover",
-          display: streamStatus === "offline" ? "none" : "block"
-        }}
-        onLoad={() => setStreamStatus("live")}
-        onError={() => setStreamStatus("offline")}
-        alt={`Stream ${cameraId}`}
-      />
+      {imgSrc && streamStatus === "live" && (
+        <img
+          src={imgSrc}
+          style={{
+            width: "100%", height: "100%", objectFit: "cover",
+            display: "block"
+          }}
+          alt={`Stream ${cameraId}`}
+        />
+      )}
       
-      {streamStatus === "offline" && (
+      {streamStatus !== "live" && (
         <OfflineCanvas cameraId={cameraId} />
       )}
 
@@ -168,4 +213,8 @@ export function VideoFeedCard({ cameraId, location }: VideoFeedCardProps) {
       )}
     </div>
   );
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

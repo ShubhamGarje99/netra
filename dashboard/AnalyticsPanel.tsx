@@ -10,6 +10,7 @@ import {
 import { INCIDENT_TYPE_LABELS } from "@/lib/netra-constants";
 
 const TYPE_COLORS: Record<string, string> = {
+  fire_breakout: "#FF6B35",
   crowd_gathering: "#C8F23A",
   road_accident: "#FF4444",
   unauthorized_entry: "#FF8C00",

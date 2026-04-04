@@ -65,6 +65,11 @@ const MAPPING_RULES: MappingRule[] = [
     type: "traffic_violation",
     severity: "medium",
   },
+  {
+    labels: ["fire", "fire_detected", "fire_breakout", "flame", "smoke", "blaze"],
+    type: "fire_breakout",
+    severity: "critical",
+  },
 ];
 
 function toDetectorLabel(value: string) {

@@ -1,0 +1,138 @@
+============================================================
+ NETRA — YOLOv8 Training  |  W&B: https://wandb.ai/coep-technological-university/netra-car-crash/runs/tt0okdg5
+============================================================
+  Data    : /Users/shubham/Developer/netra/detector/car_crash_dataset/data.yaml
+  Weights : /Users/shubham/Developer/netra/detector/yolov8n.pt
+  Device  : mps  |  Epochs: 10  |  Batch: 16
+  Output  : /Users/shubham/Developer/netra/detector/runs/train/car_crash_v1
+============================================================
+Ultralytics 8.4.33 🚀 Python-3.13.3 torch-2.11.0 MPS (Apple M3)
+[34m[1mengine/trainer: [0magnostic_nms=False, amp=True, angle=1.0, augment=False, auto_augment=randaugment, batch=16, bgr=0.0, box=7.5, cache=False, cfg=None, classes=None, close_mosaic=10, cls=0.5, compile=False, conf=None, copy_paste=0.0, copy_paste_mode=flip, cos_lr=False, cutmix=0.0, data=/Users/shubham/Developer/netra/detector/car_crash_dataset/data.yaml, degrees=5.0, deterministic=True, device=mps, dfl=1.5, dnn=False, dropout=0.0, dynamic=False, embed=None, end2end=None, epochs=10, erasing=0.4, exist_ok=True, fliplr=0.5, flipud=0.0, format=torchscript, fraction=1.0, freeze=None, half=False, hsv_h=0.015, hsv_s=0.7, hsv_v=0.4, imgsz=640, int8=False, iou=0.7, keras=False, kobj=1.0, line_width=None, lr0=0.01, lrf=0.01, mask_ratio=4, max_det=300, mixup=0.1, mode=train, model=/Users/shubham/Developer/netra/detector/yolov8n.pt, momentum=0.937, mosaic=1.0, multi_scale=0.0, name=car_crash_v1, nbs=64, nms=False, opset=None, optimize=False, optimizer=auto, overlap_mask=True, patience=0, perspective=0.0, plots=True, pose=12.0, pretrained=True, profile=False, project=/Users/shubham/Developer/netra/detector/runs/train, rect=False, resume=False, retina_masks=False, rle=1.0, save=True, save_conf=False, save_crop=False, save_dir=/Users/shubham/Developer/netra/detector/runs/train/car_crash_v1, save_frames=False, save_json=False, save_period=-1, save_txt=False, scale=0.5, seed=0, shear=0.0, show=False, show_boxes=True, show_conf=True, show_labels=True, simplify=True, single_cls=False, source=None, split=val, stream_buffer=False, task=detect, time=None, tracker=botsort.yaml, translate=0.1, val=True, verbose=True, vid_stride=1, visualize=False, warmup_bias_lr=0.1, warmup_epochs=3.0, warmup_momentum=0.8, weight_decay=0.0005, workers=4, workspace=None
+Overriding model.yaml nc=80 with nc=7
+
+                   from  n    params  module                                       arguments
+  0                  -1  1       464  ultralytics.nn.modules.conv.Conv             [3, 16, 3, 2]
+  1                  -1  1      4672  ultralytics.nn.modules.conv.Conv             [16, 32, 3, 2]
+  2                  -1  1      7360  ultralytics.nn.modules.block.C2f             [32, 32, 1, True]
+  3                  -1  1     18560  ultralytics.nn.modules.conv.Conv             [32, 64, 3, 2]
+  4                  -1  2     49664  ultralytics.nn.modules.block.C2f             [64, 64, 2, True]
+  5                  -1  1     73984  ultralytics.nn.modules.conv.Conv             [64, 128, 3, 2]
+  6                  -1  2    197632  ultralytics.nn.modules.block.C2f             [128, 128, 2, True]
+  7                  -1  1    295424  ultralytics.nn.modules.conv.Conv             [128, 256, 3, 2]
+  8                  -1  1    460288  ultralytics.nn.modules.block.C2f             [256, 256, 1, True]
+  9                  -1  1    164608  ultralytics.nn.modules.block.SPPF            [256, 256, 5]
+ 10                  -1  1         0  torch.nn.modules.upsampling.Upsample         [None, 2, 'nearest']
+ 11             [-1, 6]  1         0  ultralytics.nn.modules.conv.Concat           [1]
+ 12                  -1  1    148224  ultralytics.nn.modules.block.C2f             [384, 128, 1]
+ 13                  -1  1         0  torch.nn.modules.upsampling.Upsample         [None, 2, 'nearest']
+ 14             [-1, 4]  1         0  ultralytics.nn.modules.conv.Concat           [1]
+ 15                  -1  1     37248  ultralytics.nn.modules.block.C2f             [192, 64, 1]
+ 16                  -1  1     36992  ultralytics.nn.modules.conv.Conv             [64, 64, 3, 2]
+ 17            [-1, 12]  1         0  ultralytics.nn.modules.conv.Concat           [1]
+ 18                  -1  1    123648  ultralytics.nn.modules.block.C2f             [192, 128, 1]
+ 19                  -1  1    147712  ultralytics.nn.modules.conv.Conv             [128, 128, 3, 2]
+ 20             [-1, 9]  1         0  ultralytics.nn.modules.conv.Concat           [1]
+ 21                  -1  1    493056  ultralytics.nn.modules.block.C2f             [384, 256, 1]
+ 22        [15, 18, 21]  1    752677  ultralytics.nn.modules.head.Detect           [7, 16, None, [64, 128, 256]]
+Model summary: 130 layers, 3,012,213 parameters, 3,012,197 gradients, 8.2 GFLOPs
+
+Transferred 319/355 items from pretrained weights
+Freezing layer 'model.22.dfl.conv.weight'
+[34m[1mtrain: [0mFast image access ✅ (ping: 0.1±0.1 ms, read: 380.6±75.0 MB/s, size: 71.7 KB)
+[K[34m[1mtrain: [0mScanning /Users/shubham/Developer/netra/detector/car_crash_dataset/train/labels.cache... 1446 images, 1 backgrounds, 0 corrupt: 100% ━━━━━━━━━━━━ 1446/1446 102.8Mit/s 0.0s
+WARNING ⚠️ Box and segment counts should be equal, but got len(segments) = 1, len(boxes) = 1699. To resolve this only boxes will be used and all segments will be removed. To avoid this please supply either a detect or segment dataset, not a detect-segment mixed dataset.
+[34m[1mval: [0mFast image access ✅ (ping: 0.0±0.0 ms, read: 320.8±107.1 MB/s, size: 76.0 KB)
+[K[34m[1mval: [0mScanning /Users/shubham/Developer/netra/detector/car_crash_dataset/valid/labels.cache... 181 images, 0 backgrounds, 0 corrupt: 100% ━━━━━━━━━━━━ 181/181 84.4Mit/s 0.0s
+[34m[1moptimizer:[0m 'optimizer=auto' found, ignoring 'lr0=0.01' and 'momentum=0.937' and determining best 'optimizer', 'lr0' and 'momentum' automatically...
+[34m[1moptimizer:[0m AdamW(lr=0.000909, momentum=0.9) with parameter groups 57 weight(decay=0.0), 64 weight(decay=0.0005), 63 bias(decay=0.0)
+Plotting labels to /Users/shubham/Developer/netra/detector/runs/train/car_crash_v1/labels.jpg...
+Image sizes 640 train, 640 val
+Using 0 dataloader workers
+Logging results to [1m/Users/shubham/Developer/netra/detector/runs/train/car_crash_v1[0m
+Starting training for 10 epochs...
+Closing dataloader mosaic
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K       1/10      4.19G      1.693      3.867      2.087          7        640: 100% ━━━━━━━━━━━━ 91/91 1.2s/it 1:521.2sss
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 1.9s/it 11.3s.2ss
+                   all        181        209      0.855     0.0858      0.166     0.0968
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K       2/10       4.2G      1.591      3.108      1.948          8        640: 100% ━━━━━━━━━━━━ 91/91 1.6s/it 2:301.4ss
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 3.3s/it 19.6s4.1ss
+                   all        181        209      0.374      0.131      0.122     0.0542
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K       3/10       4.2G      1.599      2.763      1.923          9        640: 100% ━━━━━━━━━━━━ 91/91 1.6s/it 2:251.5sss
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 3.9s/it 23.5s4.5ss
+                   all        181        209      0.603      0.174       0.17     0.0633
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K       4/10      4.21G      1.597      2.508      1.933          6        640: 100% ━━━━━━━━━━━━ 91/91 2.6s/it 3:582.9ss
+WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 17% ━━────────── 1/6 21.3s/it 6.4s<1:46WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 33% ━━━━──────── 2/6 11.7s/it 12.1s<46.7sWARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 50% ━━━━━━────── 3/6 9.2s/it 18.2s<27.6sWARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 67% ━━━━━━━━──── 4/6 7.7s/it 23.8s<15.4sWARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 83% ━━━━━━━━━━── 5/6 7.2s/it 30.0s<7.2sWARNING ⚠️ NMS time limit 3.050s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 5.9s/it 35.2s
+                   all        181        209      0.412      0.299      0.208     0.0841
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K       5/10      4.21G      1.565      2.207      1.887          7        640: 100% ━━━━━━━━━━━━ 91/91 1.7s/it 2:311.8ss
+WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 17% ━━────────── 1/6 30.0s/it 9.0s<2:30WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 33% ━━━━──────── 2/6 15.1s/it 16.0s<1:00WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 50% ━━━━━━────── 3/6 10.8s/it 22.4s<32.3sWARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 67% ━━━━━━━━──── 4/6 9.3s/it 29.5s<18.6sWARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 6.9s/it 41.2s8.3s
+                   all        181        209      0.362      0.228      0.203      0.101
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K       6/10      4.21G      1.503          2      1.802          9        640: 100% ━━━━━━━━━━━━ 91/91 1.9s/it 2:491.8ss
+WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 17% ━━────────── 1/6 23.3s/it 7.0s<1:56WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 33% ━━━━──────── 2/6 13.3s/it 13.7s<53.3sWARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 5.8s/it 34.6s6.9ss
+                   all        181        209      0.579      0.424      0.425      0.203
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K       7/10      4.22G      1.457      1.764      1.756          6        640: 100% ━━━━━━━━━━━━ 91/91 1.5s/it 2:141.6ss
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 17% ━━────────── 1/6 21.1s/it 6.3s<1:45WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 5.1s/it 30.5s6.1sss
+                   all        181        209      0.535      0.396      0.328      0.166
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K       8/10      4.22G      1.424      1.637      1.711          8        640: 100% ━━━━━━━━━━━━ 91/91 1.9s/it 2:572.0ss
+WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 5.0s/it 30.1s6.0sss
+                   all        181        209      0.334      0.273      0.307      0.156
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K       9/10      4.22G      1.388       1.53       1.69          7        640: 100% ━━━━━━━━━━━━ 91/91 1.5s/it 2:201.5ss
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 4.5s/it 27.1s5.5sss
+                   all        181        209      0.392      0.516      0.435      0.223
+
+      Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+[K      10/10      4.23G      1.338       1.41      1.634          8        640: 100% ━━━━━━━━━━━━ 91/91 1.7s/it 2:371.8ss
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 17% ━━────────── 1/6 18.7s/it 5.6s<1:34WARNING ⚠️ NMS time limit 3.600s exceeded
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 4.6s/it 27.6s5.3sss
+                   all        181        209      0.436       0.37      0.425      0.229
+
+10 epochs completed in 0.527 hours.
+Optimizer stripped from /Users/shubham/Developer/netra/detector/runs/train/car_crash_v1/weights/last.pt, 6.2MB
+Optimizer stripped from /Users/shubham/Developer/netra/detector/runs/train/car_crash_v1/weights/best.pt, 6.2MB
+
+Validating /Users/shubham/Developer/netra/detector/runs/train/car_crash_v1/weights/best.pt...
+Ultralytics 8.4.33 🚀 Python-3.13.3 torch-2.11.0 MPS (Apple M3)
+Model summary (fused): 73 layers, 3,007,013 parameters, 0 gradients, 8.1 GFLOPs
+[K                 Class     Images  Instances      Box(P          R      mAP50  mAP50-95): 100% ━━━━━━━━━━━━ 6/6 5.1s/it 30.8s4.4sss
+                   all        181        209      0.435      0.374       0.43      0.232
+               vehicle        123        143      0.535      0.838      0.747      0.397
+                person         31         32      0.788      0.698      0.746      0.372
+              accident          1          1          0          0          0          0
+              moderate          3          3          0          0      0.158     0.0783
+                severe         29         30      0.851      0.333      0.501       0.31
+Speed: 0.9ms preprocess, 46.1ms inference, 0.0ms loss, 48.9ms postprocess per image
+Results saved to [1m/Users/shubham/Developer/netra/detector/runs/train/car_crash_v1[0m
+[34m[1mwandb[0m: [33mWARNING[0m Tried to log to step 10 that is less than the current step 11. Steps must be monotonically increasing, so this data will be ignored. See https://wandb.me/define-metric to log data out of order.

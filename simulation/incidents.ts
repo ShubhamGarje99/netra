@@ -118,6 +118,8 @@ function getSeverityForType(type: IncidentType): IncidentSeverity {
       return r < 0.4 ? "high" : "medium";
     case "traffic_violation":
       return r < 0.1 ? "high" : r < 0.4 ? "medium" : "low";
+    case "fire_breakout":
+      return r < 0.5 ? "critical" : r < 0.8 ? "high" : "medium";
     default:
       return "medium";
   }
@@ -155,6 +157,11 @@ function generateDescription(type: IncidentType, location: string): string {
       `Traffic signal violation detected at ${location}`,
       `Wrong-way driving observed near ${location}`,
       `Speed violation captured at ${location} zone`,
+    ],
+    fire_breakout: [
+      `Fire detected near ${location} — smoke and flames confirmed`,
+      `Active fire breakout at ${location} area`,
+      `Thermal anomaly confirmed as fire near ${location}`,
     ],
   };
 
