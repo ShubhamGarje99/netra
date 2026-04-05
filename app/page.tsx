@@ -331,7 +331,7 @@ export default function Home() {
           <div className="w-full border-t border-[#1F2433] pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="font-mono text-[#888888] text-[11px] uppercase tracking-widest flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-[#FF3B3B] rounded-full animate-pulse" />
-              Built by Team Phoenix · COEP Technological University · CSI Hackathon 2025
+              Built by Team Phoenix · COEP Technological University · CSI Hackathon 2026
             </div>
             <div className="font-mono text-[#888888] text-[11px] uppercase tracking-widest opacity-50 hover:text-[#00FFB2] hover:opacity-100 transition-all cursor-pointer">
               © {currentYear} NETRA Systems

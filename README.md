@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NETRA
 
-## Getting Started
+NETRA is an advanced drone infrastructure and AI incident detection system designed to automate surveillance, analyze video feeds, and coordinate rapid drone dispatch in real time. It serves as a unified system representing cutting-edge capabilities in computer vision, operations research, server-authoritative simulation, and rich web interfaces.
 
-First, run the development server:
+![NETRA Concept](/public/favicon.ico) *A unified system for automated drone-assisted surveillance and response.*
 
+## Features
+
+- **AI Object & Incident Detection**: Ingests bounding box telemetry and object classifications from physical or simulated camera feeds (yolov8n-based detection patterns).
+- **Server-Authoritative Simulation Engine**: Driven by a robust backend ticker that tracks drone locations, models multi-drone dispatch optimizations, and enforces state management.
+- **Autonomous Drone Dispatch**: Includes advanced logic (utilizing algorithms like the Hungarian algorithm via `munkres-js`) to efficiently pair available drones to confirmed incidents based on range, battery, and status. Includes charge pod logistics and geofenced routing.
+- **Real-Time Dashboard**: Features an expertly crafted layout with smooth visual tracking of incidents using Next.js, React Leaflet for 2D mapping, Three.js 3D capabilities, and real-time Server-Sent Events (SSE).
+- **Hardened Backend Pipeline**: Built for production-like HA setup with PostgreSQL ensuring durable simulation snapshots and persistent advisory locking to prevent split-brain on multi-instance setups.
+
+## Technology Stack
+- **Frontend**: Next.js 16.2.0, React 19, TypeScript, Tailwind CSS
+- **Maps & Vis**: Leaflet (`react-leaflet`), Three.js, Recharts, GSAP, Anime.js, Lenis
+- **State**: Zustand
+- **Backend**: Node.js (Next.js server routes), PostgreSQL (`pg`), HTTP Event Streams (SSE)
+- **Math/Geo Ops**: `polygon-clipping`, `munkres-js`, `heap-js`
+
+## Quick Start
+
+### 1. Requirements
+Ensure you have Node.js 20+ installed.
+
+### 2. Configure Environment
+Copy the example environment configuration to set up your keys and database bindings.
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
+```
+Ensure that your `.env` contains valid configurations. See `REAL_BACKEND.md` for specific backend architecture options, including TLS configurations and optional api-key checks.
+
+### 3. Installation
+Install the project dependencies:
+```bash
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4. Running the Development Server
+Start the frontend and backend integrated interface:
+```bash
+npm run dev
+source venv/bin/activate && python main.py      
+source detector/venv/bin/activate && python -m detector.main
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Navigate to [http://localhost:3000](http://localhost:3000) to view the integrated NETRA dashboard.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Ingest APIs
 
-## Learn More
+The application surfaces several integration endpoints to connect with external detectors (e.g. YOLO/PyTorch services):
+- **Simulation Control**: `POST /api/simulation/control`
+- **Detector Event Ingestion**: `POST /api/detector/events`
+- **Direct Incident Ingestion**: `POST /api/incidents`
 
-To learn more about Next.js, take a look at the following resources:
+For detailed payload schemas, check `REAL_BACKEND.md`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Testing
+Run the suite of automated tests:
+```bash
+npm run test
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+All development adheres to standard Next.js 16+ practices. Ensure you are familiar with the App Router configuration and Server Actions where applicable. 
