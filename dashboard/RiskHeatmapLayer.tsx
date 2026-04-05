@@ -22,7 +22,10 @@ export function RiskHeatmapLayer() {
       const base = zone.riskLevel === "high" ? 0.14 : zone.riskLevel === "medium" ? 0.1 : 0.06;
       const boost = Math.min(0.22, nearby * 0.045);
       const fillOpacity = Math.min(0.38, base + boost);
-      const radiusM = 650 + nearby * 220 + (zone.riskLevel === "high" ? 180 : 0);
+      
+      // Use logarithmic growth to prevent circles from becoming overwhelmingly large
+      const radiusGrowth = Math.log1p(nearby) * 250;
+      const radiusM = 650 + (zone.riskLevel === "high" ? 180 : 0) + radiusGrowth;
 
       const color =
         zone.riskLevel === "high" ? "#FF4444" : zone.riskLevel === "medium" ? "#FF8C00" : "#C8F23A";

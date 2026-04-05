@@ -160,14 +160,14 @@ export interface CameraFeed {
 }
 
 export const CAMERA_FEEDS: CameraFeed[] = [
-  // Footage-based cameras (YOLOv8 CV pipeline)
-  { id: "CAM-01", location: "JM Road Junction", position: [18.5195, 73.8553] },
-  { id: "CAM-02", location: "Hinjewadi Highway", position: [18.5913, 73.7389] },
-  { id: "CAM-03", location: "Magarpatta Entry", position: [18.5089, 73.9260] },
-  { id: "CAM-04", location: "Kharadi IT Park", position: [18.5512, 73.9442] },
-  { id: "CAM-05", location: "Crash Zone Epsilon", position: [18.5100, 73.8600] },
-  { id: "CAM-06", location: "Crowd Zone Zeta", position: [18.5150, 73.8650] },
-  { id: "CAM-07", location: "Crowd Zone Eta", position: [18.5120, 73.8680] },
+  // Footage-based cameras (YOLOv8 CV pipeline) — spread across Pune metro
+  { id: "CAM-01", location: "Shivajinagar",        position: [18.5308, 73.8475] },
+  { id: "CAM-02", location: "Hinjewadi Highway",   position: [18.5913, 73.7389] },
+  { id: "CAM-03", location: "Magarpatta Entry",    position: [18.5089, 73.9260] },
+  { id: "CAM-04", location: "Kharadi IT Park",     position: [18.5512, 73.9442] },
+  { id: "CAM-05", location: "Swargate Junction",   position: [18.5016, 73.8636] },
+  { id: "CAM-06", location: "Pimpri-Chinchwad",    position: [18.6298, 73.7997] },
+  { id: "CAM-07", location: "Hadapsar",            position: [18.5072, 73.9358] },
 ];
 
 export const RESTRICTED_CAMERA_IDS = new Set(

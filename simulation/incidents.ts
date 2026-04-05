@@ -177,7 +177,7 @@ let lastIncidentTick = 0;
 
 export function shouldGenerateIncident(currentTick: number): boolean {
   if (currentTick - lastIncidentTick < 3) return false;
-  if (Math.random() < 0.15) {
+  if (Math.random() < 0.5) {
     lastIncidentTick = currentTick;
     return true;
   }
