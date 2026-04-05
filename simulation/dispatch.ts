@@ -112,15 +112,23 @@ export function scoreDroneForIncident(
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
+/** Extended result from findBestDrone — includes scoring data for explainability. */
+export interface DispatchResult {
+  drone: Drone | null;
+  score: number;
+  allScores: { droneId: string; score: number }[];
+}
+
 /**
  * Find the best drone to dispatch to an incident using the weighted scoring
- * formula. Returns null when no drone passes the feasibility gate.
+ * formula. Returns null drone when no drone passes the feasibility gate.
+ * Now also returns allScores for dispatch decision logging.
  */
 export function findBestDrone(
   incidentPosition: LatLng,
   drones: Drone[],
   incident?: Incident,
-): Drone | null {
+): DispatchResult {
   // Build a lightweight Incident stub for scoring if one isn't provided
   // (backwards compat — callers in tests may not pass a full incident).
   const inc: Incident = incident ?? {
@@ -139,16 +147,23 @@ export function findBestDrone(
 
   let bestDrone: Drone | null = null;
   let bestScore = -Infinity;
+  const allScores: { droneId: string; score: number }[] = [];
 
   for (const drone of drones) {
     const score = scoreDroneForIncident(drone, inc);
-    if (score !== null && score > bestScore) {
-      bestScore = score;
-      bestDrone = drone;
+    if (score !== null) {
+      allScores.push({ droneId: drone.id, score: Math.round(score * 1000) / 1000 });
+      if (score > bestScore) {
+        bestScore = score;
+        bestDrone = drone;
+      }
     }
   }
 
-  return bestDrone;
+  // Sort allScores descending for readability
+  allScores.sort((a, b) => b.score - a.score);
+
+  return { drone: bestDrone, score: Math.round(bestScore * 1000) / 1000, allScores };
 }
 
 /**

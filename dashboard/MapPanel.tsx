@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, CircleMarker, Polygon, Polyline, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Polygon, Polyline, Popup, useMap, Marker } from "react-leaflet";
 import { RiskHeatmapLayer } from "@/dashboard/RiskHeatmapLayer";
 import { useSimulationStore, shallow } from "@/store/simulation-store";
 import {
@@ -18,6 +18,55 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { CCTVMarkers } from "@/dashboard/CCTVMarkers";
+
+/* ── Source badge helper ─────────────────────────────────────────── */
+function sourceBadgeHtml(incident: Incident): string {
+  if (incident.source === "yolov8_detector") {
+    return `<span style="background:rgba(255,60,60,0.15);color:#FF3B3B;border:1px solid rgba(255,60,60,0.4);font-size:9px;font-family:monospace;padding:1px 5px;border-radius:2px;white-space:nowrap;">🔴 CV: ${incident.camera_id ?? "?"}</span>`;
+  }
+  if (incident.source === "manual") {
+    return `<span style="background:rgba(60,130,255,0.12);color:#3C82FF;border:1px solid rgba(60,130,255,0.3);font-size:9px;font-family:monospace;padding:1px 5px;border-radius:2px;">🔵 MANUAL</span>`;
+  }
+  return `<span style="background:rgba(255,200,0,0.1);color:#FFC800;border:1px solid rgba(255,200,0,0.25);font-size:9px;font-family:monospace;padding:1px 5px;border-radius:2px;">🟡 SIM</span>`;
+}
+
+/* ── Drone arrow icon factory ────────────────────────────────────── */
+function createDroneIcon(heading: number, isActive: boolean, isSelected: boolean): L.DivIcon {
+  const color = isActive ? "#C8F23A" : "#3B3B3B";
+  const border = isSelected ? "#F0EEE8" : color;
+  const size = isSelected ? 22 : 16;
+  const svg = `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(${heading}deg);filter:drop-shadow(0 0 3px ${color});">
+    <polygon points="12,2 4,20 12,16 20,20" fill="${color}" stroke="${border}" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg>`;
+
+  return L.divIcon({
+    html: svg,
+    className: "drone-arrow-icon",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
+/* ── Critical incident icon factory ──────────────────────────────── */
+function createIncidentIcon(severity: string, isSelected: boolean): L.DivIcon {
+  const color = SEVERITY_COLORS[severity as keyof typeof SEVERITY_COLORS] ?? "#FFD700";
+  const size = isSelected ? 20 : 14;
+  const isCritical = severity === "critical";
+
+  return L.divIcon({
+    html: `<div style="
+      width:${size}px;height:${size}px;
+      background:${color};
+      border-radius:50%;
+      border:2px solid ${isSelected ? "#F0EEE8" : color};
+      opacity:0.85;
+      box-shadow: 0 0 6px ${color};
+    " class="${isCritical ? "incident-pulse-critical" : ""}"></div>`,
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
 
 /* ── Individual drone marker ─────────────────────────────────────── */
 const DroneMarkerItem = memo(function DroneMarkerItem({
@@ -38,16 +87,15 @@ const DroneMarkerItem = memo(function DroneMarkerItem({
     selectDrone(isSelected ? null : drone.id);
   }, [drone.id, isSelected, selectDrone, selectIncident]);
 
+  const icon = useMemo(
+    () => createDroneIcon(drone.heading, isActive, isSelected),
+    [drone.heading, isActive, isSelected],
+  );
+
   return (
-    <CircleMarker
-      center={drone.position}
-      radius={isSelected ? 8 : 6}
-      pathOptions={{
-        color: isSelected ? "#F0EEE8" : "#C8F23A",
-        fillColor: isActive ? "#C8F23A" : "#3B3B3B",
-        fillOpacity: 0.9,
-        weight: isSelected ? 2 : 1,
-      }}
+    <Marker
+      position={drone.position}
+      icon={icon}
       eventHandlers={{ click: handleClick }}
     >
       <Popup autoPan={false}>
@@ -65,13 +113,13 @@ const DroneMarkerItem = memo(function DroneMarkerItem({
           )}
         </div>
       </Popup>
-    </CircleMarker>
+    </Marker>
   );
 });
 
 /* ── Drone markers list – only re-renders when positions/status change ── */
 function DroneMarkers() {
-  // Fingerprint: only re-render when position, status, battery, or eta change
+  // Fingerprint: only re-render when position, status, battery, heading, or eta change
   const drones = useSimulationStore(
     (s) => s.drones,
     (a, b) =>
@@ -83,6 +131,7 @@ function DroneMarkers() {
           d.position[1] === b[i].position[1] &&
           d.status === b[i].status &&
           Math.round(d.battery) === Math.round(b[i].battery) &&
+          Math.round(d.heading) === Math.round(b[i].heading) &&
           d.eta === b[i].eta,
       ),
   );
@@ -117,38 +166,43 @@ const IncidentMarkerItem = memo(function IncidentMarkerItem({
   selectIncident: (id: string | null) => void;
   selectDrone: (id: string | null) => void;
 }) {
-  const color = SEVERITY_COLORS[incident.severity];
-
   const handleClick = useCallback(() => {
     selectDrone(null);
     selectIncident(isSelected ? null : incident.id);
   }, [incident.id, isSelected, selectDrone, selectIncident]);
 
+  const icon = useMemo(
+    () => createIncidentIcon(incident.severity, isSelected),
+    [incident.severity, isSelected],
+  );
+
   return (
-    <CircleMarker
-      center={incident.position}
-      radius={isSelected ? 12 : 8}
-      pathOptions={{
-        color,
-        fillColor: color,
-        fillOpacity: 0.4,
-        weight: isSelected ? 2 : 1.5,
-        dashArray: isSelected ? undefined : "4 4",
-      }}
+    <Marker
+      position={incident.position}
+      icon={icon}
       eventHandlers={{ click: handleClick }}
     >
       <Popup autoPan={false}>
         <div className="text-xs">
-          <strong>{incident.id}</strong>
+          <strong>{incident.id}</strong>{" "}
+          <span dangerouslySetInnerHTML={{ __html: sourceBadgeHtml(incident) }} />
           <br />
           {incident.description}
           <br />
           Severity: {incident.severity}
           <br />
           Status: {incident.status}
+          {incident.camera_id && (
+            <>
+              <br />
+              <span style={{ color: "rgba(0,255,178,0.7)", fontFamily: "monospace", fontSize: "10px" }}>
+                via {incident.camera_id}
+              </span>
+            </>
+          )}
         </div>
       </Popup>
-    </CircleMarker>
+    </Marker>
   );
 });
 
@@ -191,14 +245,24 @@ function IncidentMarkers() {
   );
 }
 
-/* ── Individual flight path polyline ─────────────────────────────── */
+/* ── Individual flight path polyline with marching dash animation ── */
 const FlightPathItem = memo(function FlightPathItem({
   drone,
 }: {
   drone: Drone;
 }) {
+  const polyRef = useRef<L.Polyline | null>(null);
+
+  useEffect(() => {
+    const el = polyRef.current?.getElement();
+    if (el) {
+      el.classList.add("flight-path-active");
+    }
+  });
+
   return (
     <Polyline
+      ref={polyRef}
       positions={drone.waypoints}
       pathOptions={{
         color: "#C8F23A",
@@ -395,4 +459,3 @@ export function MapPanel() {
     </div>
   );
 }
-

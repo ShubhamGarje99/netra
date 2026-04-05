@@ -199,6 +199,16 @@ export class SimulationRuntime {
     return this.engine.injectIncident(seed);
   }
 
+  /**
+   * Force a drone's battery to a specific level (demo / testing only).
+   */
+  forceDroneBattery(droneId: string, battery: number) {
+    if (!this.isLeader && isPersistenceEnabled()) {
+      throw new Error("This instance is follower-only.");
+    }
+    this.engine.forceDroneBattery(droneId, battery);
+  }
+
   async recordDetectorEvent(event: DetectorEventRecord) {
     await recordDetectorEvent(event);
   }
@@ -371,6 +381,7 @@ export class SimulationRuntime {
       drones: persisted.state.drones as ReturnType<SimulationEngine["getState"]>["drones"],
       incidents: persisted.state.incidents as ReturnType<SimulationEngine["getState"]>["incidents"],
       alerts: persisted.state.alerts as ReturnType<SimulationEngine["getState"]>["alerts"],
+      dispatchLogs: (persisted.state as Record<string, unknown>).dispatchLogs as ReturnType<SimulationEngine["getState"]>["dispatchLogs"] ?? [],
       stats: persisted.state.stats,
     };
 

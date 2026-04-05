@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useSimulationStore } from "@/store/simulation-store";
+import type { DispatchLogEntry } from "@/simulation/types";
 
 export function useSimulation() {
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -9,6 +10,7 @@ export function useSimulation() {
   const update = useSimulationStore((s) => s.update);
   const setRunning = useSimulationStore((s) => s.setRunning);
   const setLinkDegraded = useSimulationStore((s) => s.setLinkDegraded);
+  const setDispatchLogs = useSimulationStore((s) => s.setDispatchLogs);
 
   useEffect(() => {
     let unmounted = false;
@@ -20,7 +22,7 @@ export function useSimulation() {
 
         const payload = (await response.json()) as {
           running: boolean;
-          state: Parameters<typeof update>[0];
+          state: Parameters<typeof update>[0] & { dispatchLogs?: DispatchLogEntry[] };
           detectorOnline?: boolean | null;
         };
 
@@ -28,6 +30,10 @@ export function useSimulation() {
         update({ ...payload.state, detectorOnline: payload.detectorOnline ?? payload.state.detectorOnline });
         setRunning(payload.running);
         setLinkDegraded(false);
+        // Dispatch logs flow through SSE state
+        if (payload.state.dispatchLogs) {
+          setDispatchLogs(payload.state.dispatchLogs);
+        }
       } catch {
         // Keep dashboard running with last known snapshot.
       }
@@ -60,12 +66,16 @@ export function useSimulation() {
           const payload = JSON.parse(event.data) as {
             type: string;
             running: boolean;
-            state?: Parameters<typeof update>[0];
+            state?: Parameters<typeof update>[0] & { dispatchLogs?: DispatchLogEntry[] };
             detectorOnline?: boolean | null;
           };
 
           if (payload.state) {
             update({ ...payload.state, detectorOnline: payload.detectorOnline ?? payload.state.detectorOnline });
+            // Dispatch logs flow through SSE state
+            if (payload.state.dispatchLogs) {
+              setDispatchLogs(payload.state.dispatchLogs);
+            }
           }
           if (typeof payload.running === "boolean") {
             setRunning(payload.running);
@@ -94,7 +104,7 @@ export function useSimulation() {
         eventSourceRef.current = null;
       }
     };
-  }, [update, setRunning, setLinkDegraded]);
+  }, [update, setRunning, setLinkDegraded, setDispatchLogs]);
 
   return {
     stop: async () => {

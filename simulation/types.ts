@@ -75,3 +75,14 @@ export interface SimulationStats {
   dronesIdle: number;
   responseTimes: number[];
 }
+
+/** Explainability entry — surfaces the AI's dispatch scoring math. */
+export interface DispatchLogEntry {
+  incidentId: string;
+  timestamp: number;
+  selectedDroneId: string;
+  score: number;
+  eta: number;
+  batteryAfter: number;
+  runnersUp: { droneId: string; score: number }[];
+}

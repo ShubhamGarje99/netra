@@ -53,25 +53,25 @@ describe("dispatch", () => {
       const close = makeDrone({ id: "d1", position: [18.535, 73.890] });
       const far = makeDrone({ id: "d2", position: [18.590, 73.740] });
       const result = findBestDrone([18.536, 73.893], [close, far]);
-      expect(result).not.toBeNull();
-      expect(result!.id).toBe("d1");
+      expect(result.drone).not.toBeNull();
+      expect(result.drone!.id).toBe("d1");
     });
 
     it("returns null when no drones are available", () => {
       const busy = makeDrone({ status: "en-route" });
-      expect(findBestDrone([18.536, 73.893], [busy])).toBeNull();
+      expect(findBestDrone([18.536, 73.893], [busy]).drone).toBeNull();
     });
 
     it("skips drones with low battery", () => {
       const low = makeDrone({ id: "low", battery: 15 });
       const ok = makeDrone({ id: "ok", battery: 80, position: [18.59, 73.74] });
       const result = findBestDrone([18.536, 73.893], [low, ok]);
-      expect(result).not.toBeNull();
-      expect(result!.id).toBe("ok");
+      expect(result.drone).not.toBeNull();
+      expect(result.drone!.id).toBe("ok");
     });
 
     it("returns null for empty fleet", () => {
-      expect(findBestDrone([18.536, 73.893], [])).toBeNull();
+      expect(findBestDrone([18.536, 73.893], []).drone).toBeNull();
     });
 
     it("prefers a faster drone slightly farther away when ETA is lower", () => {
@@ -83,8 +83,8 @@ describe("dispatch", () => {
       const result = findBestDrone(incident.position, [slow, fast], incident);
       // The faster drone should win because its ETA is significantly lower
       // despite being slightly farther
-      expect(result).not.toBeNull();
-      expect(result!.id).toBe("fast");
+      expect(result.drone).not.toBeNull();
+      expect(result.drone!.id).toBe("fast");
     });
 
     it("rejects a drone that cannot make the round-trip", () => {
@@ -97,7 +97,7 @@ describe("dispatch", () => {
       });
       const incident = makeIncident({ position: [18.6, 74.0] }); // ~35km away
       const result = findBestDrone(incident.position, [drone], incident);
-      expect(result).toBeNull();
+      expect(result.drone).toBeNull();
     });
 
     it("for critical incidents, prefers high-battery drones (severity bonus)", () => {
@@ -116,14 +116,14 @@ describe("dispatch", () => {
       });
       const incident = makeIncident({ severity: "critical", position: [18.536, 73.893] });
       const result = findBestDrone(incident.position, [lowBat, highBat], incident);
-      expect(result).not.toBeNull();
-      expect(result!.id).toBe("high-bat");
+      expect(result.drone).not.toBeNull();
+      expect(result.drone!.id).toBe("high-bat");
     });
 
     it("legacy alias findNearestAvailableDrone still works", () => {
       const drone = makeDrone();
       const result = findNearestAvailableDrone([18.536, 73.893], [drone]);
-      expect(result).not.toBeNull();
+      expect(result.drone).not.toBeNull();
     });
   });
 
@@ -252,11 +252,11 @@ describe("dispatch", () => {
 
       // Step 1: Find best drone
       const best = findBestDrone(incident.position, fleet, incident);
-      expect(best).not.toBeNull();
-      expect(best!.id).toBe("d1"); // closest with sufficient battery + best score
+      expect(best.drone).not.toBeNull();
+      expect(best.drone!.id).toBe("d1"); // closest with sufficient battery + best score
 
       // Step 2: Dispatch
-      const { drone: dispatched, incident: updated, alert } = dispatchDrone(best!, incident);
+      const { drone: dispatched, incident: updated, alert } = dispatchDrone(best.drone!, incident);
 
       // Step 3: Verify entire state
       expect(dispatched.status).toBe("en-route");

@@ -4,17 +4,19 @@
  * updates positions, manages battery & charging, resolves incidents.
  */
 
-import type { Drone, Incident, Alert, SimulationStats } from "./types";
+import type { Drone, Incident, Alert, SimulationStats, DispatchLogEntry } from "./types";
 import { initializeFleet, updateDronePosition, clampBattery, CHARGE_RATE, LOW_BATTERY_THRESHOLD } from "./drones";
 import { buildIncident, type IncidentSeed, generateIncident, shouldGenerateIncident } from "./incidents";
-import { findBestDrone, dispatchDrone, returnToBase } from "./dispatch";
+import { findBestDrone, dispatchDrone, returnToBase, estimateRequiredBattery } from "./dispatch";
 import { calculateRoute, routeDistance } from "./pathfinding";
+import { haversineDistance } from "./pathfinding";
 
 export type EngineCallback = (state: {
   drones: Drone[];
   incidents: Incident[];
   alerts: Alert[];
   stats: SimulationStats;
+  dispatchLogs: DispatchLogEntry[];
 }) => void;
 
 export class SimulationEngine {
@@ -26,6 +28,7 @@ export class SimulationEngine {
   private callback: EngineCallback;
   private responseTimes: number[] = [];
   private autoGenerateIncidents: boolean = false;
+  private dispatchLogs: DispatchLogEntry[] = [];
 
   constructor(callback: EngineCallback) {
     this.drones = initializeFleet();
@@ -92,6 +95,7 @@ export class SimulationEngine {
       drones: [...this.drones],
       incidents: [...this.incidents],
       alerts: [...this.alerts],
+      dispatchLogs: [...this.dispatchLogs],
       stats: {
         totalIncidents: this.incidents.length,
         activeIncidents: active.length,
@@ -112,6 +116,7 @@ export class SimulationEngine {
       incidents: Incident[];
       alerts: Alert[];
       stats: SimulationStats;
+      dispatchLogs: DispatchLogEntry[];
     };
   }
 
@@ -134,6 +139,17 @@ export class SimulationEngine {
     return incident;
   }
 
+  /**
+   * Force a drone's battery to a specific level (demo / testing only).
+   * This is a pure state mutation — does not alter dispatch logic.
+   */
+  forceDroneBattery(droneId: string, battery: number) {
+    this.drones = this.drones.map((d) =>
+      d.id === droneId ? { ...d, battery: clampBattery(battery) } : d
+    );
+    this.emit();
+  }
+
   pushSystemAlert(message: string, severity: "critical" | "high" | "medium" | "low" = "medium") {
     this.alerts.push({
       id: `ALT-${Date.now()}-sys`,
@@ -151,7 +167,7 @@ export class SimulationEngine {
     const incident = this.incidents.find((inc) => inc.id === incidentId);
     if (!incident || incident.assignedDrone || incident.status !== "detected") return;
 
-    const best = findBestDrone(incident.position, this.drones, incident);
+    const { drone: best, score, allScores } = findBestDrone(incident.position, this.drones, incident);
     if (!best) return;
 
     const result = dispatchDrone(best, incident);
@@ -162,6 +178,28 @@ export class SimulationEngine {
       inc.id === result.incident.id ? result.incident : inc
     );
     this.alerts.push(result.alert);
+
+    // Build dispatch decision log entry for explainability
+    const requiredBattery = estimateRequiredBattery(
+      best.position, incident.position, best.basePosition,
+    );
+    const distKm = haversineDistance(best.position, incident.position);
+    const etaSecs = Math.round(distKm / (best.speed / 3600));
+
+    const logEntry: DispatchLogEntry = {
+      incidentId: incident.id,
+      timestamp: Date.now(),
+      selectedDroneId: best.id,
+      score,
+      eta: etaSecs,
+      batteryAfter: Math.round(best.battery - requiredBattery),
+      runnersUp: allScores.filter((s) => s.droneId !== best.id).slice(0, 3),
+    };
+    this.dispatchLogs.push(logEntry);
+    // Keep only last 10 entries
+    if (this.dispatchLogs.length > 10) {
+      this.dispatchLogs = this.dispatchLogs.slice(-10);
+    }
   }
 
   private incidentPriorityScore(incident: Incident) {

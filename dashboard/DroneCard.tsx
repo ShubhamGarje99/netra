@@ -20,6 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
 export function DroneCard({ drone }: DroneCardProps) {
   const selectedDrone = useSimulationStore((s) => s.selectedDrone);
   const selectDrone = useSimulationStore((s) => s.selectDrone);
+  const forceLowBattery = useSimulationStore((s) => s.forceLowBattery);
   const isSelected = selectedDrone === drone.id;
   const statusColor = STATUS_COLORS[drone.status] || "#757575";
 
@@ -37,12 +38,40 @@ export function DroneCard({ drone }: DroneCardProps) {
         <span className="font-mono text-[11px] text-signal tracking-wider">
           {drone.name}
         </span>
-        <span
-          className="font-mono text-[9px] tracking-wider uppercase px-1.5 py-0.5"
-          style={{ color: statusColor, backgroundColor: `${statusColor}15` }}
-        >
-          {drone.status}
-        </span>
+        <div className="flex items-center gap-1.5">
+          {/* Demo: Force low battery button */}
+          {drone.status !== "charging" && drone.battery > 20 && (
+            <span
+              role="button"
+              tabIndex={0}
+              className="font-mono text-[8px] tracking-wider uppercase px-1.5 py-0.5 cursor-pointer hover:opacity-80 transition-opacity"
+              style={{
+                color: "#FF8C00",
+                backgroundColor: "rgba(255,140,0,0.12)",
+                border: "1px solid rgba(255,140,0,0.3)",
+                borderRadius: "2px",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                forceLowBattery(drone.id);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                  forceLowBattery(drone.id);
+                }
+              }}
+            >
+              ⚡ 18%
+            </span>
+          )}
+          <span
+            className="font-mono text-[9px] tracking-wider uppercase px-1.5 py-0.5"
+            style={{ color: statusColor, backgroundColor: `${statusColor}15` }}
+          >
+            {drone.status}
+          </span>
+        </div>
       </div>
 
       {/* Stats grid */}

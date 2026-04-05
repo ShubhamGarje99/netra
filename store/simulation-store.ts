@@ -9,7 +9,7 @@
 
 import { createWithEqualityFn } from "zustand/traditional";
 import { shallow } from "zustand/shallow";
-import type { Drone, Incident, Alert, SimulationStats } from "@/simulation/types";
+import type { Drone, Incident, Alert, SimulationStats, DispatchLogEntry } from "@/simulation/types";
 
 export interface ToastPayload {
   ok: boolean;
@@ -38,6 +38,8 @@ interface SimulationStore {
   selectedCamera:    string | null;
   /** Camera online status from detector service */
   cctvOnline:        Record<string, boolean>;
+  /** Dispatch decision logs for explainability */
+  dispatchLogs:      DispatchLogEntry[];
 
   // Actions
   update: (data: {
@@ -57,6 +59,9 @@ interface SimulationStore {
   setDetectorOnline:(online: boolean | null) => void;
   setSelectedCamera:(id: string | null) => void;
   setCCTVOnline:    (id: string, online: boolean) => void;
+  addDispatchLog:   (entry: DispatchLogEntry) => void;
+  setDispatchLogs:  (logs: DispatchLogEntry[]) => void;
+  forceLowBattery:  (droneId: string) => void;
 }
 
 const INITIAL_STATS: SimulationStats = {
@@ -84,6 +89,7 @@ export const useSimulationStore = createWithEqualityFn<SimulationStore>(
     detectorOnline:   null,
     selectedCamera:   null,
     cctvOnline:       {},
+    dispatchLogs:     [],
 
     update: (data) =>
       set({
@@ -104,6 +110,17 @@ export const useSimulationStore = createWithEqualityFn<SimulationStore>(
     setDetectorOnline:(online)   => set({ detectorOnline: online }),
     setSelectedCamera:(id)       => set({ selectedCamera: id }),
     setCCTVOnline:    (id, online) => set((s) => ({ cctvOnline: { ...s.cctvOnline, [id]: online } })),
+    addDispatchLog:   (entry) => set((s) => ({
+      dispatchLogs: [...s.dispatchLogs, entry].slice(-10),
+    })),
+    setDispatchLogs:  (logs) => set({ dispatchLogs: logs.slice(-10) }),
+    forceLowBattery:  (droneId) => {
+      fetch("/api/simulation/force-battery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ droneId, battery: 18 }),
+      }).catch(() => { /* swallow */ });
+    },
   }),
   shallow
 );

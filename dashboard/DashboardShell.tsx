@@ -11,8 +11,9 @@ import { IncidentTimeline } from "./IncidentTimeline";
 import { OperationsLogPanel } from "./OperationsLogPanel";
 import { AnalyticsPanel } from "./AnalyticsPanel";
 import { DronePOVFeed } from "./DronePOVFeed";
+import { DispatchLogPanel } from "./DispatchLogPanel";
 import { Toast } from "./Toast";
-import { Camera, ChevronDown, ChevronUp } from "lucide-react";
+import { Camera, Brain, ChevronDown, ChevronUp } from "lucide-react";
 
 // Dynamic import for Leaflet (SSR-incompatible)
 const MapPanel = dynamic(() => import("./MapPanel").then((m) => m.MapPanel), {
@@ -26,6 +27,7 @@ const MapPanel = dynamic(() => import("./MapPanel").then((m) => m.MapPanel), {
 
 export function DashboardShell() {
   const [povOpen, setPovOpen] = useState(true);
+  const [dispatchLogOpen, setDispatchLogOpen] = useState(false);
 
   const drones = useSimulationStore((s) => s.drones);
   const hasBusyDrone = drones.some(
@@ -80,6 +82,41 @@ export function DashboardShell() {
                 )}
               </div>
             )}
+
+            {/* Dispatch Log — collapsible overlay on bottom-right of map */}
+            <div
+              className={`
+                absolute bottom-2 right-2 z-[1000] transition-all duration-300 ease-in-out
+                ${dispatchLogOpen ? "w-[380px] h-[260px]" : "w-auto h-auto"}
+              `}
+            >
+              {dispatchLogOpen ? (
+                <div className="w-full h-full rounded border border-pulse/30 overflow-hidden shadow-lg shadow-black/50 bg-surface flex flex-col">
+                  <button
+                    onClick={() => setDispatchLogOpen(false)}
+                    className="absolute top-1 right-1 z-10 text-dim hover:text-signal text-xs px-1"
+                  >
+                    ✕
+                  </button>
+                  <DispatchLogPanel />
+                </div>
+              ) : (
+                <button
+                  onClick={() => setDispatchLogOpen(true)}
+                  className="
+                    flex items-center gap-1.5 px-2.5 py-1.5 rounded border
+                    border-pulse/40 bg-void/90 backdrop-blur-sm
+                    font-mono text-[10px] text-pulse tracking-wider
+                    hover:bg-pulse/10 hover:border-pulse/60 transition-all
+                    shadow-md shadow-black/40
+                  "
+                >
+                  <Brain className="w-3 h-3" />
+                  AI LOG
+                  <ChevronUp className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Alert panel */}
