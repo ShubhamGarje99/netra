@@ -163,7 +163,7 @@ export function VideoFeedCard({ cameraId, location }: VideoFeedCardProps) {
 
   return (
     <div className="relative bg-void overflow-hidden transition-all duration-300"
-         style={{ border: borderStyle, aspectRatio: "4/3" }}>
+         style={{ border: borderStyle }}>
       
       {imgSrc && streamStatus === "live" && (
         <img

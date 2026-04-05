@@ -35,10 +35,11 @@ export default function Home() {
     : 0;
   
   // Real or mock data for the stats
-  const totalIncidentsDetected = stats.totalIncidents > 0 ? stats.totalIncidents : 14;
-  const dronesDeployed = dronesOnline > 0 ? dronesOnline : 3;
-  const responseTimeMin = avgResponse > 0 ? avgResponse : 2.3;
-  const coverageKmSq = 12.3;
+  const totalIncidentsDetected = stats.totalIncidents > 0 ? stats.totalIncidents : 64;
+  const dronesDeployed = dronesOnline > 0 ? dronesOnline : 8;
+  const responseTimeMin = avgResponse > 0 ? avgResponse : 1.4;
+  const totalDrones = stats.dronesActive + stats.dronesIdle;
+  const coverageArea = totalDrones > 0 ? (totalDrones * 1.54) : 12.3;
 
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
@@ -65,8 +66,7 @@ export default function Home() {
           </div>
           <div className="hidden md:flex items-center gap-8 font-mono text-[11px] tracking-[0.2em] text-[#888888] uppercase">
             <button type="button" onClick={() => scrollToId("system")} className="hover:text-[#00FFB2] hover:drop-shadow-[0_0_8px_rgba(0,255,178,0.8)] transition-all">System</button>
-            <button type="button" onClick={() => scrollToId("technology")} className="hover:text-[#00FFB2] hover:drop-shadow-[0_0_8px_rgba(0,255,178,0.8)] transition-all">Technology</button>
-            <button type="button" onClick={() => scrollToId("deploy")} className="hover:text-[#00FFB2] hover:drop-shadow-[0_0_8px_rgba(0,255,178,0.8)] transition-all">Deploy</button>
+            <button type="button" onClick={() => scrollToId("technology")} className="hover:text-[#00FFB2] hover:drop-shadow-[0_0_8px_rgba(0,255,178,0.8)] transition-all">Architecture</button>
           </div>
           <Link
             href="/dashboard"
@@ -111,7 +111,7 @@ export default function Home() {
                    <span className="w-1.5 h-1.5 bg-[#00FFB2] rounded-full animate-pulse" /> Perception
                  </div>
                  <div className="text-2xl text-[#FFFFFF] font-medium tracking-tight mb-1">YOLOv8 Vision</div>
-                 <div className="text-[13px] text-[#888888] max-w-[150px] leading-relaxed">Real-time threat & incident detection @ 60 FPS</div>
+                 <div className="text-[13px] text-[#888888] max-w-[150px] leading-relaxed">Real-time threat & incident detection pipeline</div>
                  <svg className="absolute left-[110%] top-[40%] w-32 h-px opacity-40 mix-blend-screen" overflow="visible"><line x1="0" y1="0" x2="100" y2="40" stroke="#00FFB2" /></svg>
                </div>
 
@@ -121,7 +121,7 @@ export default function Home() {
                    Telemetry <span className="w-1.5 h-1.5 bg-[#00FFB2] rounded-full animate-pulse" />
                  </div>
                  <div className="text-xl text-[#FFFFFF] font-medium tracking-tight mb-1 max-w-[150px] ml-auto">Full Situational Awareness</div>
-                 <div className="text-[13px] text-[#888888] max-w-[150px] leading-relaxed ml-auto">Zero delay.</div>
+                 <div className="text-[13px] text-[#888888] max-w-[150px] leading-relaxed ml-auto">Low-latency data flow.</div>
                  <svg className="absolute right-[110%] top-[40%] w-32 h-px opacity-40 mix-blend-screen" overflow="visible"><line x1="100" y1="0" x2="0" y2="40" stroke="#00FFB2" /></svg>
                </div>
 
@@ -173,15 +173,15 @@ export default function Home() {
             <span className="inline-block px-8">·</span>
             <span className="inline-block px-8">{dronesDeployed} drones active</span>
             <span className="inline-block px-8">·</span>
-            <span className="inline-block px-8">{coverageKmSq} km² coverage</span>
+            <span className="inline-block px-8">{coverageArea.toFixed(1)} km² coverage</span>
             {/* Duplicate for seamless loop */}
-            <span className="inline-block px-8">{totalIncidentsDetected} incidents resolved</span>
+            <span className="inline-block px-8">{totalIncidentsDetected} incidents detected</span>
             <span className="inline-block px-8">·</span>
-            <span className="inline-block px-8">avg response {responseTimeMin} min</span>
+            <span className="inline-block px-8">avg response {responseTimeMin.toFixed(1)} min</span>
             <span className="inline-block px-8">·</span>
             <span className="inline-block px-8">{dronesDeployed} drones active</span>
             <span className="inline-block px-8">·</span>
-            <span className="inline-block px-8">{coverageKmSq} km² coverage</span>
+            <span className="inline-block px-8">{coverageArea.toFixed(1)} km² coverage</span>
           </div>
         </div>
         <style dangerouslySetInnerHTML={{__html: `
@@ -209,7 +209,7 @@ export default function Home() {
             <div className="font-mono text-[10px] text-[#888888] tracking-[0.3em] uppercase group-hover:text-[#FFFFFF] transition-colors">Avg Response</div>
           </div>
           <div className="flex flex-col items-center justify-center p-8 text-center group hover:bg-[#161A25]/50 transition-colors">
-            <div className="text-[#00FFB2] drop-shadow-[0_0_15px_rgba(0,255,178,0.8)] font-display text-4xl mb-2"><AnimatedCounter value={coverageKmSq} decimals={1} suffix=" km²" /></div>
+            <div className="text-[#00FFB2] drop-shadow-[0_0_15px_rgba(0,255,178,0.8)] font-display text-4xl mb-2"><AnimatedCounter value={coverageArea} decimals={1} suffix=" km²" /></div>
             <div className="font-mono text-[10px] text-[#888888] tracking-[0.3em] uppercase group-hover:text-[#FFFFFF] transition-colors">Coverage Area</div>
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
             
-            <div className="relative group section-content p-8 rounded-2xl border border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent backdrop-blur-sm transition-all duration-500 hover:scale-105 hover:bg-[#00FFB2]/5 hover:border-[#00FFB2]/30 hover:shadow-[0_0_40px_rgba(0,255,178,0.15)] overflow-hidden">
+            <div className="relative group section-content p-8 rounded-2xl border border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent backdrop-blur-sm transition-all duration-500 hover:scale-105 hover:bg-[#00FFB2]/5 hover:border-[#00FFB2]/30 hover:shadow-[0_0_40px_rgba(0,255,178,0.15)] overflow-hidden lg:mt-24">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#00FFB2]/20 blur-[60px] group-hover:bg-[#00FFB2]/40 transition-colors" />
               <div className="font-mono text-xs text-[#00FFB2] tracking-widest mb-8 drop-shadow-[0_0_5px_rgba(0,255,178,0.8)]">PHASE 01</div>
               <div className="w-14 h-14 rounded-lg border border-[#00FFB2]/30 bg-[#161A25] flex items-center justify-center mb-8 group-hover:border-[#00FFB2] group-hover:shadow-[0_0_20px_rgba(0,255,178,0.4)] transition-all">
@@ -236,8 +236,6 @@ export default function Home() {
               <p className="text-[#888888] leading-relaxed text-sm max-w-sm group-hover:text-[#AAAAAA]">
                 Computer vision identifies incidents across CCTV feeds in real time, filtering noise with high precision confidence models.
               </p>
-              {/* Connector */}
-              <div className="hidden lg:block absolute top-[52px] left-[calc(100%-2rem)] w-[calc(100%+4rem)] h-[2px] bg-gradient-to-r from-[#00FFB2]/30 to-transparent z-[-1]" />
             </div>
 
             <div className="relative group section-content p-8 rounded-2xl border border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent backdrop-blur-sm transition-all duration-500 hover:scale-105 hover:bg-[#00FFB2]/5 hover:border-[#00FFB2]/30 hover:shadow-[0_0_40px_rgba(0,255,178,0.15)] overflow-hidden lg:mt-12">
@@ -250,11 +248,9 @@ export default function Home() {
               <p className="text-[#888888] leading-relaxed text-sm max-w-sm group-hover:text-[#AAAAAA]">
                 The nearest available drone is autonomously assigned and routed, dynamically avoiding no-fly zones through A* pathfinding.
               </p>
-              {/* Connector */}
-              <div className="hidden lg:block absolute top-[52px] left-[calc(100%-2rem)] w-[calc(100%+4rem)] h-[2px] bg-gradient-to-r from-[#00FFB2]/30 to-transparent z-[-1]" />
             </div>
 
-            <div className="relative group section-content p-8 rounded-2xl border border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent backdrop-blur-sm transition-all duration-500 hover:scale-105 hover:bg-[#00FFB2]/5 hover:border-[#00FFB2]/30 hover:shadow-[0_0_40px_rgba(0,255,178,0.15)] overflow-hidden lg:mt-24">
+            <div className="relative group section-content p-8 rounded-2xl border border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent backdrop-blur-sm transition-all duration-500 hover:scale-105 hover:bg-[#00FFB2]/5 hover:border-[#00FFB2]/30 hover:shadow-[0_0_40px_rgba(0,255,178,0.15)] overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#00FFB2]/20 blur-[60px] group-hover:bg-[#00FFB2]/40 transition-colors" />
               <div className="font-mono text-xs text-[#00FFB2] tracking-widest mb-8 drop-shadow-[0_0_5px_rgba(0,255,178,0.8)]">PHASE 03</div>
               <div className="w-14 h-14 rounded-lg border border-[#00FFB2]/30 bg-[#161A25] flex items-center justify-center mb-8 group-hover:border-[#00FFB2] group-hover:shadow-[0_0_20px_rgba(0,255,178,0.4)] transition-all">
@@ -280,7 +276,7 @@ export default function Home() {
             <div>
               <h2 className="font-display text-5xl text-[#FFFFFF] mb-8 tracking-tight drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">Intelligence at the Edge</h2>
               <p className="text-[#888888] text-lg leading-relaxed mb-10 max-w-lg">
-                NETRA's architecture is built for zero-latency operations. It processes raw CCTV feeds using YOLOv8, maps detections to coordinates, and broadcasts dispatch payloads via Server-Sent Events—all within milliseconds.
+                NETRA's architecture is built for continuous, low-latency operations. It processes raw CCTV feeds using YOLOv8, maps detections to coordinates, and broadcasts dispatch payloads via Server-Sent Events—all asynchronously.
               </p>
               <div className="flex flex-wrap gap-3">
                 {["Next.js", "TypeScript", "Python", "YOLOv8", "Leaflet", "Zustand", "FastAPI", "SSE"].map(badge => (
@@ -303,51 +299,36 @@ export default function Home() {
       {/* ── 7. SOCIAL PROOF ── */}
       <section className="py-32 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMGEwYTBmIiAvPgo8cGF0aCBkPSJNMCAwTDggOFoiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAyKSIgc3Ryb2tlLXdpZHRoPSIxIiAvPgo8L3N2Zz4=')] border-b border-[#1F2433]">
         <div className="container mx-auto px-6 md:px-12 max-w-[1440px] section-content">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-12 lg:p-20 grid grid-cols-1 md:grid-cols-3 gap-12 divide-y md:divide-y-0 md:divide-x divide-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.5)] relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#00FFB2]/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#3B82F6]/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none" />
+          <div className="rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl p-12 lg:p-20 shadow-[0_40px_100px_rgba(0,0,0,0.5)] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#00FFB2]/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none z-0" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#3B82F6]/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none z-0" />
             
-            <div className="flex flex-col md:items-center text-center relative z-10 group">
-              <div className="font-display text-6xl md:text-7xl mb-4 tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] to-[#888888] group-hover:from-[#00FFB2] group-hover:to-[#00aa77] transition-all drop-shadow-[0_0_25px_rgba(0,255,178,0)] group-hover:drop-shadow-[0_0_25px_rgba(0,255,178,0.5)]">{"<"} 8s</div>
-              <div className="font-mono text-xs tracking-[0.2em] text-[#00FFB2] uppercase mb-2">Dispatch Time</div>
-              <div className="text-sm text-[#888888]">From detection to drone liftoff</div>
-            </div>
-            <div className="flex flex-col md:items-center text-center pt-12 md:pt-0 relative z-10 group">
-              <div className="font-display text-6xl md:text-7xl mb-4 tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] to-[#888888] group-hover:from-[#8B5CF6] group-hover:to-[#5B21B6] transition-all drop-shadow-[0_0_25px_rgba(139,92,246,0)] group-hover:drop-shadow-[0_0_25px_rgba(139,92,246,0.5)]">92%</div>
-              <div className="font-mono text-xs tracking-[0.2em] text-[#8B5CF6] uppercase mb-2">Detection Accuracy</div>
-              <div className="text-sm text-[#888888]">Computer vision confident models</div>
-            </div>
-            <div className="flex flex-col md:items-center text-center pt-12 md:pt-0 relative z-10 group">
-              <div className="font-display text-6xl md:text-7xl mb-4 tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] to-[#888888] group-hover:from-[#3B82F6] group-hover:to-[#1D4ED8] transition-all drop-shadow-[0_0_25px_rgba(59,130,246,0)] group-hover:drop-shadow-[0_0_25px_rgba(59,130,246,0.5)]">24/7</div>
-              <div className="font-mono text-xs tracking-[0.2em] text-[#3B82F6] uppercase mb-2">Autonomous Operation</div>
-              <div className="text-sm text-[#888888]">Uninterrupted city-wide watch</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10 relative z-10">
+              <div className="flex flex-col md:items-center text-center relative z-10 group px-4 md:px-8 lg:px-12">
+                <div className="font-display text-4xl md:text-5xl mb-4 pb-1 md:pb-2 tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] to-[#888888] group-hover:from-[#00FFB2] group-hover:to-[#00aa77] transition-all drop-shadow-[0_0_25px_rgba(0,255,178,0)] group-hover:drop-shadow-[0_0_25px_rgba(0,255,178,0.5)]">Explainable AI</div>
+                <div className="font-mono text-xs tracking-[0.2em] text-[#00FFB2] uppercase mb-2">Transparent Matrix</div>
+                <div className="text-sm text-[#888888]">Real-time decision logs surfacing exact mathematical dispatch weights</div>
+              </div>
+              <div className="flex flex-col md:items-center text-center pt-12 md:pt-0 relative z-10 group px-4 md:px-8 lg:px-12">
+                <div className="font-display text-4xl md:text-5xl mb-4 pb-1 md:pb-2 tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] to-[#888888] group-hover:from-[#8B5CF6] group-hover:to-[#5B21B6] transition-all drop-shadow-[0_0_25px_rgba(139,92,246,0)] group-hover:drop-shadow-[0_0_25px_rgba(139,92,246,0.5)]">Smart Charging</div>
+                <div className="font-mono text-xs tracking-[0.2em] text-[#8B5CF6] uppercase mb-2">Automated RTB</div>
+                <div className="text-sm text-[#888888]">Self-regulating fleet with autonomous Pod routing logic</div>
+              </div>
+              <div className="flex flex-col md:items-center text-center pt-12 md:pt-0 relative z-10 group px-4 md:px-8 lg:px-12">
+                <div className="font-display text-4xl md:text-5xl mb-4 pb-1 md:pb-2 tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] to-[#888888] group-hover:from-[#3B82F6] group-hover:to-[#1D4ED8] transition-all drop-shadow-[0_0_25px_rgba(59,130,246,0)] group-hover:drop-shadow-[0_0_25px_rgba(59,130,246,0.5)]">Custom Engine</div>
+                <div className="font-mono text-xs tracking-[0.2em] text-[#3B82F6] uppercase mb-2">High-Fidelity Physics</div>
+                <div className="text-sm text-[#888888]">Custom TypeScript physics and environment state logic</div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── 8. CTA FOOTER ── */}
-      <section id="deploy" className="pt-32 pb-12 bg-[#0F111A] relative overflow-hidden">
+      <section className="pt-16 pb-12 bg-[#0F111A] relative overflow-hidden">
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-[300px] bg-[radial-gradient(ellipse_at_bottom,rgba(0,255,178,0.1)_0%,transparent_60%)] pointer-events-none" />
         <div className="container mx-auto px-6 md:px-12 max-w-[1440px] flex flex-col items-center section-content relative z-10">
-          <h2 className="font-display text-5xl md:text-6xl text-[#FFFFFF] mb-12 tracking-tight drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">Deploy NETRA.</h2>
-          
-          <form className="w-full max-w-lg flex flex-col sm:flex-row gap-4 mb-32 relative" onSubmit={e => e.preventDefault()}>
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#00FFB2] to-transparent rounded opacity-30 blur-sm" />
-            <input 
-              type="email" 
-              placeholder="operator@citygov.org" 
-              className="flex-1 bg-[#0A0A0F]/80 backdrop-blur-md border border-[#00FFB2]/30 px-6 py-4 text-base text-[#FFFFFF] font-mono focus:outline-none focus:border-[#00FFB2] focus:shadow-[0_0_20px_rgba(0,255,178,0.3)] transition-all z-10 relative"
-            />
-            <button 
-              type="submit" 
-              className="bg-[#00FFB2] text-[#0A0A0F] font-mono font-bold text-sm px-8 py-4 tracking-[0.2em] uppercase transition-all hover:scale-[0.98] hover:shadow-[0_0_30px_rgba(0,255,178,0.5)] flex items-center justify-center gap-3 z-10 relative"
-            >
-              Request <ArrowRight className="w-5 h-5" />
-            </button>
-          </form>
-
-          <div className="w-full border-t border-[#1F2433] pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="w-full border-t border-[#1F2433] pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="font-mono text-[#888888] text-[11px] uppercase tracking-widest flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-[#FF3B3B] rounded-full animate-pulse" />
               Built by Team Phoenix · COEP Technological University · CSI Hackathon 2025

@@ -1,7 +1,6 @@
 "use client";
 
 import { VideoFeedCard } from "./VideoFeedCard";
-import { DronePOVFeed } from "./DronePOVFeed";
 import { CAMERA_FEEDS } from "@/lib/netra-constants";
 import { Video } from "lucide-react";
 
@@ -13,11 +12,7 @@ export function VideoFeedPanel() {
         <span>Video Feeds — AI Detection</span>
       </div>
 
-      <div className="h-[132px] shrink-0 border-b border-noise/20 min-h-[120px]">
-        <DronePOVFeed />
-      </div>
-
-      <div className="flex-1 grid grid-cols-2 auto-rows-[minmax(100px,1fr)] gap-1 p-1 overflow-y-auto min-h-0" data-lenis-prevent>
+      <div className="flex-1 grid grid-cols-2 auto-rows-fr gap-1 p-1 overflow-y-auto min-h-0" data-lenis-prevent>
         {CAMERA_FEEDS.map((feed) => (
           <VideoFeedCard
             key={feed.id}

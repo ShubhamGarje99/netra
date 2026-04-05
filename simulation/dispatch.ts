@@ -11,6 +11,7 @@
 
 import type { Drone, Incident, Alert, IncidentSeverity } from "./types";
 import type { LatLng } from "@/lib/netra-constants";
+import { BASE_LOCATIONS } from "@/lib/netra-constants";
 import { haversineDistance, routeDistance } from "./pathfinding";
 import { calculateRoute } from "./pathfinding";
 
@@ -213,10 +214,45 @@ export function dispatchDrone(
 }
 
 /**
+ * Find the nearest base location (HQ or Charge Pod) to a given position.
+ * Iterates the full BASE_LOCATIONS array — HQ and pod are treated equally.
+ */
+export function getNearestBase(position: LatLng): { id: string; position: LatLng; type: "hq" | "pod" } {
+  let nearest = BASE_LOCATIONS[0];
+  let minDist = Infinity;
+
+  for (const base of BASE_LOCATIONS) {
+    const d = haversineDistance(position, [base.lat, base.lng]);
+    if (d < minDist) {
+      minDist = d;
+      nearest = base;
+    }
+  }
+
+  return { id: nearest.id, position: [nearest.lat, nearest.lng], type: nearest.type };
+}
+
+/**
+ * Check whether a position is within charging range of any base (HQ or Pod).
+ * Uses a 500m threshold — roughly the footprint of a charge pad.
+ */
+const BASE_PROXIMITY_KM = 0.5;
+export function isNearBase(position: LatLng): boolean {
+  for (const base of BASE_LOCATIONS) {
+    if (haversineDistance(position, [base.lat, base.lng]) <= BASE_PROXIMITY_KM) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Create a return-to-base route for a drone.
+ * Routes to the nearest base (HQ or Charge Pod) instead of always the home base.
  */
 export function returnToBase(drone: Drone): Drone {
-  const route = calculateRoute(drone.position, drone.basePosition);
+  const nearest = getNearestBase(drone.position);
+  const route = calculateRoute(drone.position, nearest.position);
 
   return {
     ...drone,

@@ -12,6 +12,7 @@ import {
   TILE_ATTRIBUTION,
   NO_FLY_ZONES,
   SEVERITY_COLORS,
+  BASE_LOCATIONS,
 } from "@/lib/netra-constants";
 import type { Drone, Incident } from "@/simulation/types";
 import L from "leaflet";
@@ -65,6 +66,50 @@ function createIncidentIcon(severity: string, isSelected: boolean): L.DivIcon {
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
+  });
+}
+
+/* ── Base location icon factories ────────────────────────────────── */
+function createHQIcon(): L.DivIcon {
+  return L.divIcon({
+    html: `<div style="
+      width:26px;height:26px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(0,255,178,0.08);
+      border:1.5px solid rgba(0,255,178,0.5);
+      border-radius:4px;
+      box-shadow: 0 0 10px rgba(0,255,178,0.2);
+      transform:rotate(45deg);
+    "><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="transform:rotate(-45deg);">
+      <path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" stroke="rgba(0,255,178,0.8)" stroke-width="1.5" fill="rgba(0,255,178,0.1)"/>
+      <circle cx="12" cy="12" r="3" fill="rgba(0,255,178,0.7)"/>
+      <line x1="12" y1="5" x2="12" y2="9" stroke="rgba(0,255,178,0.5)" stroke-width="1"/>
+      <line x1="12" y1="15" x2="12" y2="19" stroke="rgba(0,255,178,0.5)" stroke-width="1"/>
+      <line x1="5" y1="12" x2="9" y2="12" stroke="rgba(0,255,178,0.5)" stroke-width="1"/>
+      <line x1="15" y1="12" x2="19" y2="12" stroke="rgba(0,255,178,0.5)" stroke-width="1"/>
+    </svg></div>`,
+    className: "",
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
+}
+
+function createPodIcon(): L.DivIcon {
+  return L.divIcon({
+    html: `<div style="
+      width:18px;height:18px;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(255,200,0,0.06);
+      border:1.5px solid rgba(255,200,0,0.5);
+      border-radius:3px;
+      box-shadow: 0 0 8px rgba(255,200,0,0.15);
+      animation: pod-glow 2s ease-in-out infinite;
+    "><svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+      <path d="M13 2L4 14h7l-2 8 9-12h-7l2-8z" fill="rgba(255,200,0,0.8)" stroke="rgba(255,200,0,0.9)" stroke-width="1"/>
+    </svg></div>`,
+    className: "",
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
   });
 }
 
@@ -333,6 +378,47 @@ function NoFlyZones() {
   );
 }
 
+/* ── Base location markers ─────────────────────────────────────── */
+function BaseMarkers() {
+  const hqIcon = useMemo(() => createHQIcon(), []);
+  const podIcon = useMemo(() => createPodIcon(), []);
+
+  return (
+    <>
+      {BASE_LOCATIONS.map((base) => {
+        const isHQ = base.type === "hq";
+        return (
+          <Marker
+            key={base.id}
+            position={[base.lat, base.lng]}
+            icon={isHQ ? hqIcon : podIcon}
+          >
+            <Popup autoPan={false}>
+              <div className="text-xs">
+                <strong style={{ color: isHQ ? "#00FFB2" : "#FFC800" }}>
+                  {isHQ ? "Command Center" : "Automated Charge Pod"}: {base.id}
+                </strong>
+                <br />
+                <span style={{ opacity: 0.7 }}>
+                  {base.lat.toFixed(4)}, {base.lng.toFixed(4)}
+                </span>
+                {!isHQ && (
+                  <>
+                    <br />
+                    <span style={{ color: "#FFC800", fontSize: "9px", fontFamily: "monospace" }}>
+                      ⚡ EMERGENCY LANDING + RECHARGE
+                    </span>
+                  </>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
+    </>
+  );
+}
+
 function IncidentTargeting() {
   const map = useMap();
   const targetingMode = useSimulationStore((s) => s.targetingMode);
@@ -449,6 +535,7 @@ export function MapPanel() {
         <TileLayer url={DARK_TILE_URL} attribution={TILE_ATTRIBUTION} />
         <RiskHeatmapLayer />
         <NoFlyZones />
+        <BaseMarkers />
         <FlightPaths />
         <DroneMarkers />
         <IncidentMarkers />

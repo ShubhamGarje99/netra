@@ -7,7 +7,7 @@
 import type { Drone, Incident, Alert, SimulationStats, DispatchLogEntry } from "./types";
 import { initializeFleet, updateDronePosition, clampBattery, CHARGE_RATE, LOW_BATTERY_THRESHOLD } from "./drones";
 import { buildIncident, type IncidentSeed, generateIncident, shouldGenerateIncident } from "./incidents";
-import { findBestDrone, dispatchDrone, returnToBase, estimateRequiredBattery } from "./dispatch";
+import { findBestDrone, dispatchDrone, returnToBase, estimateRequiredBattery, isNearBase, getNearestBase } from "./dispatch";
 import { calculateRoute, routeDistance } from "./pathfinding";
 import { haversineDistance } from "./pathfinding";
 
@@ -303,13 +303,17 @@ export class SimulationEngine {
         updated.status === "returning" &&
         updated.currentWaypointIndex >= updated.waypoints.length
       ) {
+        // Snap to the final waypoint (nearest base) — NOT always home base
+        const destination = updated.waypoints.length > 0
+          ? updated.waypoints[updated.waypoints.length - 1]
+          : updated.basePosition;
         return {
           ...updated,
           status: "idle" as const,
           altitude: 0,
           waypoints: [],
           currentWaypointIndex: 0,
-          position: updated.basePosition,
+          position: destination,
         };
       }
 
@@ -355,18 +359,23 @@ export class SimulationEngine {
           );
         }
 
+        // Check if the drone crashed near a base — if so it can charge, otherwise stranded
+        const nearBase = isNearBase(drone.position);
+
         this.alerts.push({
           id: `ALT-${Date.now()}-dead-${drone.id}`,
           incidentId: drone.assignedIncident ?? "",
           timestamp: Date.now(),
-          message: `🔴 ${drone.name} BATTERY DEPLETED — emergency landing at current position`,
+          message: nearBase
+            ? `⚠ ${drone.name} BATTERY DEPLETED — emergency landing at nearby charge station`
+            : `🔴 ${drone.name} BATTERY DEPLETED — stranded, awaiting field recovery`,
           severity: "critical",
           type: "system",
         });
 
         return {
           ...drone,
-          status: "charging" as const,
+          status: nearBase ? ("charging" as const) : ("idle" as const),
           altitude: 0,
           assignedIncident: null,
           waypoints: [],
@@ -414,14 +423,34 @@ export class SimulationEngine {
       }
     }
 
-    // 6. Battery management — charging cycle
+    // 6. Battery management — charging cycle (only at base locations)
     this.drones = this.drones.map((d) => {
-      // Idle drones with battery < 100 → enter charging state
-      if (d.status === "idle" && d.battery < 100) {
+      // Idle drones at a base with battery < 100 → enter charging state
+      if (d.status === "idle" && d.battery < 100 && isNearBase(d.position)) {
         return {
           ...d,
           status: "charging" as const,
           battery: clampBattery(d.battery + CHARGE_RATE),
+        };
+      }
+
+      // Stranded idle drone (not at base, 0% battery) → auto-recover to nearest base
+      // Simulates a field recovery team retrieving the drone
+      if (d.status === "idle" && d.battery <= 0 && !isNearBase(d.position)) {
+        const nearest = getNearestBase(d.position);
+        this.alerts.push({
+          id: `ALT-${Date.now()}-recover-${d.id}`,
+          incidentId: "",
+          timestamp: Date.now(),
+          message: `🔧 ${d.name} recovered by field team — transported to ${nearest.id}`,
+          severity: "medium",
+          type: "system",
+        });
+        return {
+          ...d,
+          position: nearest.position,
+          status: "charging" as const,
+          battery: clampBattery(0 + CHARGE_RATE),
         };
       }
 

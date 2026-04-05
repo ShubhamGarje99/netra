@@ -22,6 +22,13 @@ export interface NoFlyZone {
   polygon: LatLng[];
 }
 
+export interface BaseLocation {
+  id: string;
+  lat: number;
+  lng: number;
+  type: "hq" | "pod";
+}
+
 // ── Drone Fleet (8 drones across Pune) ──────────────────────────────────────
 
 export const DRONE_FLEET: DroneConfig[] = [
@@ -91,6 +98,23 @@ export const NO_FLY_ZONES: NoFlyZone[] = [
       [18.6320, 73.8280],
     ],
   },
+];
+
+// ── Base Locations (HQs + Automated Charge Pods) ─────────────────────────────
+
+export const BASE_LOCATIONS: BaseLocation[] = [
+  // ── Command Centers ──
+  { id: "HQ-ALPHA", lat: 18.5204, lng: 73.8567, type: "hq" },
+  { id: "HQ-BRAVO", lat: 18.5500, lng: 73.9000, type: "hq" },
+  // ── Charge Pods — dispersed along long-distance corridors ──
+  { id: "POD-01",   lat: 18.5050, lng: 73.8150, type: "pod" }, // West — covers FC Road corridor
+  { id: "POD-02",   lat: 18.5650, lng: 73.9150, type: "pod" }, // East — Kalyani Nagar corridor
+  { id: "POD-03",   lat: 18.4900, lng: 73.8600, type: "pod" }, // South — Swargate zone
+  { id: "POD-04",   lat: 18.5730, lng: 73.7700, type: "pod" }, // Hinjewadi midway relay
+  { id: "POD-05",   lat: 18.5400, lng: 73.9400, type: "pod" }, // Kharadi corridor
+  { id: "POD-06",   lat: 18.6100, lng: 73.8200, type: "pod" }, // North — Pimpri relay
+  { id: "POD-07",   lat: 18.5100, lng: 73.9250, type: "pod" }, // Magarpatta–Hadapsar link
+  { id: "POD-08",   lat: 18.5550, lng: 73.8500, type: "pod" }, // Central — Aundh midpoint
 ];
 
 // ── Map config ───────────────────────────────────────────────────────────────

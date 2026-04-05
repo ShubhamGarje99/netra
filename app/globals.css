@@ -108,6 +108,12 @@ body {
   animation: pulse-critical 1.5s infinite;
 }
 
+/* Charge Pod glow animation */
+@keyframes pod-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(255,200,0,0.25); }
+  50%      { box-shadow: 0 0 18px rgba(255,200,0,0.55), 0 0 30px rgba(255,200,0,0.15); }
+}
+
 /* Drone directional arrow marker */
 .drone-arrow-icon {
   background: transparent !important;
